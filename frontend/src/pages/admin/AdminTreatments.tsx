@@ -7,20 +7,58 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Pencil, Trash2, X, PlayCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useTreatments } from "@/hooks/useTreatments";
+import { API_BASE_URL } from "@/lib/api";
+
+const CATEGORY_ORDER = [
+  "SKIN & ADVANCED FACIAL TREATMENTS",
+  "HAIR & SCALP TREATMENTS",
+  "PANCHKARMA (MAIN DETOX THERAPIES)",
+  "OTHER PANCHKARMA & SUPPORTIVE THERAPIES",
+  "WEIGHT LOSS & BODY DETOX",
+  "WELLNESS, WOMEN & IMMUNITY CARE",
+];
 
 const AdminTreatments = () => {
   const { treatments, loading, refetch } = useTreatments();
   const [list, setList] = useState<Treatment[]>([]);
   const [editing, setEditing] = useState<Treatment | null>(null);
   const [isNew, setIsNew] = useState(false);
+  const [editLang, setEditLang] = useState<'en' | 'hi'>('en');
 
   useEffect(() => {
-    setList(treatments);
+    // Sort treatments: First by category order, then main categories first
+    const sorted = [...treatments].sort((a, b) => {
+      const idxA = CATEGORY_ORDER.indexOf(a.category);
+      const idxB = CATEGORY_ORDER.indexOf(b.category);
+      
+      // If categories are different, sort by CATEGORY_ORDER
+      if (idxA !== idxB) {
+        // Handle unknown categories by putting them at the end
+        if (idxA === -1) return 1;
+        if (idxB === -1) return -1;
+        return idxA - idxB;
+      }
+      
+      // If same category, ensure Main Category is always at the top
+      if (a.isMainCategory !== b.isMainCategory) {
+        return a.isMainCategory ? -1 : 1;
+      }
+      
+      return 0; // Otherwise keep original order
+    });
+    setList(sorted);
   }, [treatments]);
 
   const emptyTreatment: Treatment = {
     treatmentId: "", title: "", shortDescription: "", description: "",
-    benefits: [], process: [], duration: "", image: "", category: "", videoUrl: "",
+    benefits: [], 
+    process: [
+      { name: "", description: "" },
+      { name: "", description: "" },
+      { name: "", description: "" },
+      { name: "", description: "" }
+    ], 
+    duration: "", image: "", category: "", videoUrl: "",
     gallery: [], isMainCategory: false
   };
 
@@ -44,35 +82,61 @@ const AdminTreatments = () => {
 
   const addProcessStep = () => {
     if (!editing) return;
-    setEditing({ ...editing, process: [...editing.process, { name: "", description: "", image: "" }] });
+    const newEditing = { ...editing, process: [...editing.process, { name: "", description: "", image: "" }] };
+    if (newEditing.processHi && newEditing.processHi.length > 0) {
+      newEditing.processHi = [...newEditing.processHi, { name: "", description: "" }];
+    }
+    setEditing(newEditing);
   };
 
   const removeProcessStep = (index: number) => {
     if (!editing) return;
     const newProcess = [...editing.process];
     newProcess.splice(index, 1);
-    setEditing({ ...editing, process: newProcess });
+    
+    const newEditing = { ...editing, process: newProcess };
+    if (newEditing.processHi && newEditing.processHi.length > 0) {
+      const newProcessHi = [...newEditing.processHi];
+      newProcessHi.splice(index, 1);
+      newEditing.processHi = newProcessHi;
+    }
+    setEditing(newEditing);
   };
 
   const save = async () => {
     if (!editing?.title) { toast.error("Title is required"); return; }
+    if (!editing?.category) { toast.error("Please select a Category from the dropdown"); return; }
 
     try {
+      const payload = {
+        ...editing,
+        gallery: (editing.gallery || [])
+          .flatMap(s => s.split(/[\n,]+/))
+          .map(s => s.trim())
+          .filter(Boolean)
+      };
+
       if (isNew) {
-        const res = await fetch("http://localhost:5000/api/treatments", {
+        const res = await fetch(`${API_BASE_URL}/api/treatments`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(editing)
+          body: JSON.stringify(payload)
         });
-        if (!res.ok) throw new Error("Failed to create");
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.message || "Failed to create");
+        }
         toast.success("Treatment added!");
       } else {
-        const res = await fetch(`http://localhost:5000/api/treatments/${editing._id}`, {
+        const res = await fetch(`${API_BASE_URL}/api/treatments/${editing._id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(editing)
+          body: JSON.stringify(payload)
         });
-        if (!res.ok) throw new Error("Failed to update");
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.message || "Failed to update");
+        }
         toast.success("Treatment updated!");
       }
       refetch();
@@ -85,7 +149,7 @@ const AdminTreatments = () => {
   const remove = async (id: string) => {
     if (!confirm("Are you sure you want to delete this treatment?")) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/treatments/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/treatments/${id}`, {
         method: "DELETE"
       });
       if (!res.ok) throw new Error("Failed to delete");
@@ -100,9 +164,27 @@ const AdminTreatments = () => {
     if (!editing) return null;
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center pb-4 border-b">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 border-b gap-4">
           <h3 className="font-display text-xl font-bold text-primary">{isNew ? "Create New" : "Update"} Treatment</h3>
-          <Button variant="ghost" size="icon" onClick={close} className="rounded-full hover:bg-muted-foreground/10"><X size={20} /></Button>
+          <div className="flex items-center gap-4">
+            <div className="flex bg-muted rounded-full p-1 border border-border">
+              <button 
+                type="button"
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${editLang === 'en' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                onClick={() => setEditLang('en')}
+              >
+                English
+              </button>
+              <button 
+                type="button"
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${editLang === 'hi' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                onClick={() => setEditLang('hi')}
+              >
+                Hindi (हिन्दी)
+              </button>
+            </div>
+            <Button variant="ghost" size="icon" onClick={close} className="rounded-full hover:bg-muted-foreground/10"><X size={20} /></Button>
+          </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -112,11 +194,26 @@ const AdminTreatments = () => {
           </div>
           <div className="space-y-2">
             <Label className="text-sm font-semibold">Title</Label>
-            <Input value={editing.title} placeholder="e.g. Abhyanga Massage" onChange={e => setEditing({ ...editing, title: e.target.value })} />
+            <Input 
+              value={editLang === 'en' ? editing.title : (editing.titleHi || "")} 
+              placeholder={editLang === 'en' ? "e.g. Abhyanga Massage" : "उदा. अभ्यंग मालिश"} 
+              onChange={e => editLang === 'en' 
+                ? setEditing({ ...editing, title: e.target.value }) 
+                : setEditing({ ...editing, titleHi: e.target.value })} 
+            />
           </div>
           <div className="space-y-2">
             <Label className="text-sm font-semibold">Category</Label>
-            <Input value={editing.category} placeholder="e.g. PANCHKARMA" onChange={e => setEditing({ ...editing, category: e.target.value })} />
+            <select
+              value={editing.category}
+              onChange={e => setEditing({ ...editing, category: e.target.value })}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <option value="" disabled>Select a Category...</option>
+              {CATEGORY_ORDER.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
           </div>
           <div className="space-y-2">
             <Label className="text-sm font-semibold">Duration</Label>
@@ -144,22 +241,74 @@ const AdminTreatments = () => {
           
           <div className="md:col-span-2 space-y-2">
             <Label className="text-sm font-semibold">Short Description</Label>
-            <Textarea value={editing.shortDescription} placeholder="A brief summary for the cards..." onChange={e => setEditing({ ...editing, shortDescription: e.target.value })} />
+            <Textarea 
+              value={editLang === 'en' ? editing.shortDescription : (editing.shortDescriptionHi || "")} 
+              placeholder="A brief summary for the cards..." 
+              onChange={e => editLang === 'en' 
+                ? setEditing({ ...editing, shortDescription: e.target.value })
+                : setEditing({ ...editing, shortDescriptionHi: e.target.value })} 
+            />
           </div>
           
           <div className="md:col-span-2 space-y-2">
-            <Label className="text-sm font-semibold">Gallery (comma separated URLs)</Label>
-            <Input value={(editing.gallery || []).join(", ")} placeholder="url1, url2, url3" onChange={e => setEditing({ ...editing, gallery: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })} />
+            <Label className="text-sm font-semibold">Gallery (one URL per line)</Label>
+            <Textarea 
+              value={(editing.gallery || []).join("\n")} 
+              placeholder="https://image1.jpg&#10;https://image2.jpg" 
+              onChange={e => setEditing({ ...editing, gallery: e.target.value.split("\n") })} 
+              rows={3}
+            />
           </div>
 
           <div className="md:col-span-2 space-y-2">
             <Label className="text-sm font-semibold">Full Treatment Description</Label>
-            <Textarea rows={6} value={editing.description} placeholder="Provide deep details about the therapy..." onChange={e => setEditing({ ...editing, description: e.target.value })} />
+            <Textarea 
+              rows={6} 
+              value={editLang === 'en' ? editing.description : (editing.descriptionHi || "")} 
+              placeholder="Provide deep details about the therapy..." 
+              onChange={e => editLang === 'en' 
+                ? setEditing({ ...editing, description: e.target.value })
+                : setEditing({ ...editing, descriptionHi: e.target.value })} 
+            />
           </div>
 
           <div className="md:col-span-2 space-y-2">
             <Label className="text-sm font-semibold">Key Benefits (comma separated)</Label>
-            <Input value={(editing.benefits || []).join(", ")} placeholder="Relaxation, Pain Relief, Detox..." onChange={e => setEditing({ ...editing, benefits: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })} />
+            <Input 
+              value={editLang === 'en' ? (editing.benefits || []).join(", ") : (editing.benefitsHi || []).join(", ")} 
+              placeholder="Relaxation, Pain Relief, Detox..." 
+              onChange={e => {
+                const arr = e.target.value.split(",").map(s => s.trim()).filter(Boolean);
+                if (editLang === 'en') setEditing({ ...editing, benefits: arr });
+                else setEditing({ ...editing, benefitsHi: arr });
+              }} 
+            />
+          </div>
+
+          <div className="md:col-span-2 space-y-2">
+            <Label className="text-sm font-semibold">Who Can Benefit (comma separated)</Label>
+            <Input 
+              value={editLang === 'en' ? (editing.whoCanBenefit || []).join(", ") : (editing.whoCanBenefitHi || []).join(", ")} 
+              placeholder="Acne, Fine Lines, Dull Skin..." 
+              onChange={e => {
+                const arr = e.target.value.split(",").map(s => s.trim()).filter(Boolean);
+                if (editLang === 'en') setEditing({ ...editing, whoCanBenefit: arr });
+                else setEditing({ ...editing, whoCanBenefitHi: arr });
+              }} 
+            />
+          </div>
+
+          <div className="md:col-span-2 space-y-2">
+            <Label className="text-sm font-semibold">Why Choose Us (comma separated)</Label>
+            <Input 
+              value={editLang === 'en' ? (editing.whyChooseUs || []).join(", ") : (editing.whyChooseUsHi || []).join(", ")} 
+              placeholder="Experienced Doctors, Herbal Treatments..." 
+              onChange={e => {
+                const arr = e.target.value.split(",").map(s => s.trim()).filter(Boolean);
+                if (editLang === 'en') setEditing({ ...editing, whyChooseUs: arr });
+                else setEditing({ ...editing, whyChooseUsHi: arr });
+              }} 
+            />
           </div>
 
           <div className="md:col-span-2 mt-4 pt-4 border-t">
@@ -170,27 +319,61 @@ const AdminTreatments = () => {
               </Button>
             </div>
             <div className="space-y-4">
-              {editing.process.map((step, idx) => (
-                <div key={idx} className="p-5 border border-border rounded-xl relative bg-muted/30 group transition-all hover:border-primary/30">
-                  <Button type="button" variant="ghost" size="icon" className="absolute top-3 right-3 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeProcessStep(idx)}>
-                    <Trash2 size={16} />
-                  </Button>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div className="space-y-1">
-                      <Label className="text-xs font-bold uppercase text-muted-foreground">Phase Name</Label>
-                      <Input value={step.name} placeholder="e.g. Preparation" onChange={e => handleProcessChange(idx, "name", e.target.value)} />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs font-bold uppercase text-muted-foreground">Illustration URL</Label>
-                      <Input value={step.image || ""} placeholder="Image URL (Optional)" onChange={e => handleProcessChange(idx, "image", e.target.value)} />
+              {(() => {
+                // Ensure processHi exists if editing in Hindi, or fallback to english array length
+                const processArr = editLang === 'en' ? editing.process : (editing.processHi?.length > 0 ? editing.processHi : editing.process.map(() => ({ name: "", description: "" })));
+                return processArr.map((step, idx) => (
+                  <div key={idx} className="p-5 border border-border rounded-xl relative bg-muted/30 group transition-all hover:border-primary/30">
+                    <Button type="button" variant="ghost" size="icon" className="absolute top-3 right-3 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeProcessStep(idx)}>
+                      <Trash2 size={16} />
+                    </Button>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div className="space-y-1">
+                        <Label className="text-xs font-bold uppercase text-muted-foreground">Phase Name</Label>
+                        <Input 
+                          value={step.name || ""} 
+                          placeholder="e.g. Preparation" 
+                          onChange={e => {
+                            if (editLang === 'en') {
+                              handleProcessChange(idx, "name", e.target.value);
+                            } else {
+                              const newProcessHi = [...(editing.processHi?.length > 0 ? editing.processHi : editing.process.map(() => ({ name: "", description: "" })))];
+                              newProcessHi[idx] = { ...newProcessHi[idx], name: e.target.value };
+                              setEditing({ ...editing, processHi: newProcessHi });
+                            }
+                          }} 
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs font-bold uppercase text-muted-foreground">Illustration URL</Label>
+                        <Input 
+                          value={editLang === 'en' ? (editing.process[idx]?.image || "") : (editing.process[idx]?.image || "")} 
+                          disabled={editLang === 'hi'}
+                          placeholder={editLang === 'hi' ? "(Switch to English to edit image)" : "Image URL (Optional)"} 
+                          onChange={e => handleProcessChange(idx, "image", e.target.value)} 
+                        />
                     </div>
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs font-bold uppercase text-muted-foreground">Phase Description</Label>
-                    <Textarea rows={2} value={step.description} placeholder="Describe this step..." onChange={e => handleProcessChange(idx, "description", e.target.value)} />
+                    <Textarea 
+                      rows={2} 
+                      value={step.description || ""} 
+                      placeholder="Describe this step..." 
+                      onChange={e => {
+                        if (editLang === 'en') {
+                          handleProcessChange(idx, "description", e.target.value);
+                        } else {
+                          const newProcessHi = [...(editing.processHi?.length > 0 ? editing.processHi : editing.process.map(() => ({ name: "", description: "" })))];
+                          newProcessHi[idx] = { ...newProcessHi[idx], description: e.target.value };
+                          setEditing({ ...editing, processHi: newProcessHi });
+                        }
+                      }} 
+                    />
                   </div>
                 </div>
-              ))}
+              ));
+            })()}
             </div>
           </div>
         </div>

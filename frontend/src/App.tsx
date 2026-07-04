@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import Layout from "@/components/Layout";
 import AdminLayout from "@/components/AdminLayout";
 import Index from "./pages/Index";
@@ -20,6 +21,7 @@ import AdminAppointments from "./pages/admin/AdminAppointments";
 import AdminReviews from "./pages/admin/AdminReviews";
 import AdminStock from "./pages/admin/AdminStock";
 import AdminBilling from "./pages/admin/AdminBilling";
+import AdminDailyLog from "./pages/admin/AdminDailyLog";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,33 +29,36 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route element={<Layout />}>
-              <Route path="/" element={<Index />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/treatments" element={<Treatments />} />
-              <Route path="/treatments/:id" element={<TreatmentDetail />} />
-              <Route path="/appointment" element={<Appointment />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-            </Route>
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="treatments" element={<AdminTreatments />} />
-              <Route path="appointments" element={<AdminAppointments />} />
-              <Route path="reviews" element={<AdminReviews />} />
-              <Route path="stock" element={<AdminStock />} />
-              <Route path="billing" element={<AdminBilling />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route element={<Layout />}>
+                <Route path="/" element={<Index />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/treatments" element={<Treatments />} />
+                <Route path="/treatments/:id" element={<TreatmentDetail />} />
+                <Route path="/appointment" element={<Appointment />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+              </Route>
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="treatments" element={<AdminTreatments />} />
+                <Route path="appointments" element={<AdminAppointments />} />
+                <Route path="reviews" element={<AdminReviews />} />
+                <Route path="stock" element={<AdminStock />} />
+                <Route path="billing" element={<AdminBilling />} />
+                <Route path="daily-log" element={<AdminDailyLog />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </LanguageProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

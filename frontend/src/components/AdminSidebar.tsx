@@ -24,6 +24,7 @@ const items = [
   { title: "Reviews", url: "/admin/reviews", icon: Star },
   { title: "Stock", url: "/admin/stock", icon: Package },
   { title: "Billing", url: "/admin/billing", icon: Receipt },
+  { title: "Daily Log", url: "/admin/daily-log", icon: CalendarCheck },
 ];
 
 export function AdminSidebar() {
@@ -40,8 +41,11 @@ export function AdminSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border">
-      <div className="p-4 flex items-center gap-2 border-b border-border">
-        <img src={logo} alt="Kalpvan" className="h-8 w-8 flex-shrink-0" />
+      <div className="p-4 flex items-center gap-3 border-b border-border">
+        <div className="relative flex items-center justify-center shrink-0">
+          <div className="absolute inset-0 bg-white/60 dark:bg-white/20 blur-[8px] rounded-full scale-[1.5]"></div>
+          <img src={logo} alt="Kalpvan" className="relative z-10 h-7 w-7 object-contain drop-shadow-[0_1px_8px_rgba(255,255,255,0.6)]" />
+        </div>
         {!collapsed && (
           <div>
             <span className="font-display text-sm font-bold text-foreground block leading-tight">Kalpvan</span>

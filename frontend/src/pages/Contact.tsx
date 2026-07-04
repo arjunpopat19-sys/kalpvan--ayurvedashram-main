@@ -5,17 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getTranslation } from "@/data/translations";
 
 const Contact = () => {
+  const { language } = useLanguage();
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.message) {
-      toast.error("Please fill in all required fields.");
+      toast.error(getTranslation(language, 'reqFields'));
       return;
     }
-    toast.success("Message sent! We'll get back to you soon.");
+    toast.success(getTranslation(language, 'msgSent'));
     setForm({ name: "", email: "", subject: "", message: "" });
   };
 
@@ -24,10 +27,10 @@ const Contact = () => {
       <section className="section-padding">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <p className="text-primary font-medium text-sm uppercase tracking-widest mb-2">Get in Touch</p>
-            <h1 className="font-display text-3xl md:text-5xl font-bold text-foreground mb-4">Contact Us</h1>
+            <p className="text-primary font-medium text-sm uppercase tracking-widest mb-2">{getTranslation(language, 'getInTouch')}</p>
+            <h1 className="font-display text-3xl md:text-5xl font-bold text-foreground mb-4">{getTranslation(language, 'contactUsTitle')}</h1>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Have questions? Reach out to us and we'll respond promptly.
+              {getTranslation(language, 'contactDesc')}
             </p>
           </div>
 
@@ -35,9 +38,9 @@ const Contact = () => {
             {/* Contact Info */}
             <div className="space-y-6">
               {[
-                { icon: Phone, label: "Phone", value: "+91 98243 70788", href: "tel:+919824370788" },
-                { icon: Mail, label: "Email", value: "kalpvan_panchkarma@yahoo.com", href: "mailto:kalpvan_panchkarma@yahoo.com" },
-                { icon: MapPin, label: "Address", value: "119, Akshardham Complex, Opp. Sai Mandir, Zadeshwar Road, Bharuch - 392011" },
+                { icon: Phone, label: getTranslation(language, 'phoneLabel'), value: "+91 98243 70788", href: "tel:+919824370788" },
+                { icon: Mail, label: getTranslation(language, 'emailLabel'), value: "kalpvan_panchkarma@yahoo.com", href: "mailto:kalpvan_panchkarma@yahoo.com" },
+                { icon: MapPin, label: getTranslation(language, 'addressLabel'), value: "119, Akshardham Complex, Opp. Sai Mandir, Zadeshwar Road, Bharuch - 392011" },
               ].map((item) => (
                 <motion.div
                   key={item.label}
@@ -72,24 +75,24 @@ const Contact = () => {
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">Name *</label>
-                  <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Your name" className="rounded-xl" />
+                  <label className="text-sm font-medium text-foreground mb-2 block">{getTranslation(language, 'nameLabel')}</label>
+                  <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={getTranslation(language, 'namePlaceholder')} className="rounded-xl" />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">Email *</label>
-                  <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="your@email.com" className="rounded-xl" />
+                  <label className="text-sm font-medium text-foreground mb-2 block">{getTranslation(language, 'emailLabel')} *</label>
+                  <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder={getTranslation(language, 'emailPlaceholder')} className="rounded-xl" />
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium text-foreground mb-2 block">Subject</label>
-                <Input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} placeholder="What is this about?" className="rounded-xl" />
+                <label className="text-sm font-medium text-foreground mb-2 block">{getTranslation(language, 'subjectLabel')}</label>
+                <Input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} placeholder={getTranslation(language, 'subjectPlaceholder')} className="rounded-xl" />
               </div>
               <div>
-                <label className="text-sm font-medium text-foreground mb-2 block">Message *</label>
-                <Textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Your message..." rows={5} className="rounded-xl" />
+                <label className="text-sm font-medium text-foreground mb-2 block">{getTranslation(language, 'messageLabel')}</label>
+                <Textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder={getTranslation(language, 'messagePlaceholder')} rows={5} className="rounded-xl" />
               </div>
               <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8">
-                <Send className="mr-2" size={16} /> Send Message
+                <Send className="mr-2" size={16} /> {getTranslation(language, 'sendBtn')}
               </Button>
             </motion.form>
           </div>

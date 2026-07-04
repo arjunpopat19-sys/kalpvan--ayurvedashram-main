@@ -1,307 +1,362 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, CheckCircle2, Droplets, ShieldCheck, Activity, Zap, Leaf } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { treatments as defaultTreatments } from "@/data/treatments";
+import {
+  Search, ArrowRight, Clock, Sparkles, Leaf, Activity,
+  ShieldCheck, Droplets, Zap, X, ChevronRight, CheckCircle
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useTreatments } from "@/hooks/useTreatments";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getTranslation } from "@/data/translations";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: (i: number) => ({
-    opacity: 1, y: 0,
-    transition: { delay: i * 0.08, duration: 0.5 },
-  }),
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
 };
 
-const SkeletonCard = () => (
-  <div className="bg-card rounded-2xl overflow-hidden shadow-sm border border-border animate-pulse">
-    <div className="aspect-[4/3] bg-muted"></div>
-    <div className="p-6">
-      <div className="h-5 w-20 bg-muted rounded-full mb-3"></div>
-      <div className="h-6 w-3/4 bg-muted rounded mb-2"></div>
-      <div className="h-4 w-full bg-muted rounded mb-1"></div>
-      <div className="h-4 w-5/6 bg-muted rounded mb-4"></div>
-      <div className="h-4 w-24 bg-muted rounded"></div>
-    </div>
-  </div>
-);
+/* ─── Variants ───────────────────────────────────────────────────────────── */
+const cardVariant = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.05, duration: 0.4, ease: "easeOut" } }),
+};
 
-const Treatments = () => {
-  const { treatments, loading, error } = useTreatments();
-  const allTreatments = treatments.length > 0 ? treatments : defaultTreatments;
+const sectionVariant = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.6 } }
+};
+
+/* ─── Category Config ────────────────────────────────────────────────────── */
+const CATS = [
+  {
+    key: "SKIN & ADVANCED FACIAL TREATMENTS",
+    tKey: "catSkin",
+    icon: Sparkles,
+    gradient: "from-rose-500 to-pink-600",
+    soft: "bg-rose-50 dark:bg-rose-950/30",
+    border: "border-rose-200 dark:border-rose-800",
+    text: "text-rose-600 dark:text-rose-400",
+    tagline: "Glow. Rejuvenate. Radiate.",
+  },
+  {
+    key: "HAIR & SCALP TREATMENTS",
+    tKey: "catHair",
+    icon: Zap,
+    gradient: "from-violet-500 to-purple-600",
+    soft: "bg-violet-50 dark:bg-violet-950/30",
+    border: "border-violet-200 dark:border-violet-800",
+    text: "text-violet-600 dark:text-violet-400",
+    tagline: "Regrow. Strengthen. Nourish.",
+  },
+  {
+    key: "PANCHKARMA (MAIN DETOX THERAPIES)",
+    tKey: "catPanchkarma",
+    icon: Droplets,
+    gradient: "from-emerald-500 to-teal-600",
+    soft: "bg-emerald-50 dark:bg-emerald-950/30",
+    border: "border-emerald-200 dark:border-emerald-800",
+    text: "text-emerald-600 dark:text-emerald-400",
+    tagline: "Cleanse. Balance. Restore.",
+  },
+  {
+    key: "OTHER PANCHKARMA & SUPPORTIVE THERAPIES",
+    tKey: "catSupportive",
+    icon: Leaf,
+    gradient: "from-green-500 to-lime-600",
+    soft: "bg-green-50 dark:bg-green-950/30",
+    border: "border-green-200 dark:border-green-800",
+    text: "text-green-600 dark:text-green-400",
+    tagline: "Relax. Heal. Rejuvenate.",
+  },
+  {
+    key: "WEIGHT LOSS & BODY DETOX",
+    tKey: "catWeight",
+    icon: Activity,
+    gradient: "from-amber-500 to-orange-600",
+    soft: "bg-amber-50 dark:bg-amber-950/30",
+    border: "border-amber-200 dark:border-amber-800",
+    text: "text-amber-600 dark:text-amber-400",
+    tagline: "Detox. Slim. Energise.",
+  },
+  {
+    key: "WELLNESS, WOMEN & IMMUNITY CARE",
+    tKey: "catWellness",
+    icon: ShieldCheck,
+    gradient: "from-sky-500 to-blue-600",
+    soft: "bg-sky-50 dark:bg-sky-950/30",
+    border: "border-sky-200 dark:border-sky-800",
+    text: "text-sky-600 dark:text-sky-400",
+    tagline: "Balance. Protect. Flourish.",
+  },
+];
+
+/* ─── Treatment Card ─────────────────────────────────────────────────────── */
+const TreatmentCard = ({ t, i, catConfig }: { t: any; i: number; catConfig: any }) => {
+  const Icon = catConfig.icon;
+  const { language } = useLanguage();
   
-  const [searchQuery, setSearchQuery] = useState("");
-  // Initialize category from URL parameter if present
-  const [selectedCategory, setSelectedCategory] = useState(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      return params.get("category") || "All";
-    }
-    return "All";
-  });
-
-  const CATEGORY_ORDER = [
-    "SKIN & ADVANCED FACIAL TREATMENTS",
-    "HAIR & SCALP TREATMENTS",
-    "PANCHKARMA (MAIN DETOX THERAPIES)",
-    "OTHER PANCHKARMA & SUPPORTIVE THERAPIES",
-    "WEIGHT LOSS & BODY DETOX",
-    "WELLNESS, WOMEN & IMMUNITY CARE"
-  ];
-
-  const categories = useMemo(() => {
-    const cats = Array.from(new Set(allTreatments.map(t => t.category)));
-    return ["All", ...CATEGORY_ORDER.filter(c => cats.includes(c)), ...cats.filter(c => !CATEGORY_ORDER.includes(c))];
-  }, [allTreatments]);
-
-  // Group treatments by category when "All" is selected and there's no search query
-  const groupedTreatments = useMemo(() => {
-    if (selectedCategory !== "All" || searchQuery) return null;
-    
-    return categories.filter(c => c !== "All").map(cat => ({
-      categoryName: cat,
-      items: allTreatments.filter(t => t.category === cat)
-    })).filter(group => group.items.length > 0);
-  }, [categories, allTreatments, selectedCategory, searchQuery]);
-
-  const filteredTreatments = useMemo(() => {
-    if (groupedTreatments) return [];
-    
-    return allTreatments.filter(t => {
-      const matchSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          t.shortDescription.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchCategory = selectedCategory === "All" || t.category === selectedCategory;
-      return matchSearch && matchCategory;
-    });
-  }, [allTreatments, searchQuery, selectedCategory, groupedTreatments]);
+  const title = (language === 'hi' && t.titleHi) ? t.titleHi : t.title;
+  const shortDescription = (language === 'hi' && t.shortDescriptionHi) ? t.shortDescriptionHi : t.shortDescription;
 
   return (
-    <div className="pt-20">
-      <section className="section-padding section-alt min-h-[80vh]">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-10">
-            <p className="text-primary font-medium text-sm uppercase tracking-widest mb-2">Our Treatments</p>
-            <h1 className="font-display text-3xl md:text-5xl font-bold text-foreground mb-4">
-              Ayurvedic Healing Therapies
-            </h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
-              Browse our complete range of authentic Ayurvedic treatments tailored to your wellness needs.
-            </p>
-            
-            {/* Filters and Search */}
-            <div className="flex flex-col md:flex-row justify-center items-center gap-4 max-w-4xl mx-auto">
-              {selectedCategory === "All" && (
-                <div className="relative w-full md:max-w-sm">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-                  <Input 
-                    placeholder="Search treatments..." 
-                    className="pl-10 bg-background border-border rounded-full shadow-sm"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-              )}
-              <div className="flex w-full md:w-auto bg-background border border-border p-1 rounded-full shadow-sm overflow-x-auto hide-scrollbar">
-                {categories.map(cat => (
+    <motion.div variants={cardVariant} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }}>
+      <Link
+        to={`/treatments/${t.treatmentId}`}
+        className="group block bg-card rounded-2xl overflow-hidden border border-border/60 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 h-full flex flex-col"
+      >
+        <div className="relative aspect-[16/10] overflow-hidden">
+          <img
+            src={t.image}
+            alt={title}
+            loading="lazy"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+          {t.duration && (
+            <span className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm text-white text-[10px] font-medium px-2.5 py-1 rounded-full flex items-center gap-1">
+              <Clock size={10} /> {t.duration}
+            </span>
+          )}
+          <div className={`absolute bottom-3 left-3 w-9 h-9 rounded-xl bg-gradient-to-br ${catConfig.gradient} flex items-center justify-center shadow-lg`}>
+            <Icon size={16} className="text-white" />
+          </div>
+        </div>
+
+        <div className="p-5 flex-1 flex flex-col">
+          <h3 className="font-display text-base font-bold text-foreground mb-2 group-hover:text-primary transition-colors leading-snug">
+            {title}
+          </h3>
+          <p className="text-muted-foreground text-xs leading-relaxed line-clamp-2 flex-grow">
+            {shortDescription}
+          </p>
+          <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/40">
+            <span className={`text-xs font-semibold ${catConfig.text}`}>{getTranslation(language, catConfig.tKey)}</span>
+            <span className="inline-flex items-center gap-1 text-primary text-xs font-bold group-hover:gap-2 transition-all">
+              {getTranslation(language, 'knowMore')} <ArrowRight size={12} />
+            </span>
+          </div>
+        </div>
+      </Link>
+    </motion.div>
+  );
+};
+
+/* ─── Main Page ──────────────────────────────────────────────────────────── */
+const Treatments = () => {
+  const [search, setSearch] = useState("");
+  const { treatments: allTreatments } = useTreatments();
+  const { language } = useLanguage();
+
+  const searchResults = useMemo(() => {
+    if (!search.trim()) return [];
+    const q = search.toLowerCase();
+    return allTreatments.filter(
+      t => (t.title && t.title.toLowerCase().includes(q)) || 
+           (t.shortDescription && t.shortDescription.toLowerCase().includes(q)) ||
+           (t.titleHi && t.titleHi.includes(q)) ||
+           (t.shortDescriptionHi && t.shortDescriptionHi.includes(q))
+    );
+  }, [search, allTreatments]);
+
+  const isSearching = search.trim().length > 0;
+
+  return (
+    <div className="pt-20 min-h-screen bg-background">
+
+      {/* ── Page Hero ── */}
+      <div className="bg-gradient-to-b from-muted/60 to-background border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-16 text-center">
+          <p className="text-primary font-semibold text-xs uppercase tracking-[0.2em] mb-3">
+            {getTranslation(language, 'directory')}
+          </p>
+          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6">
+            {getTranslation(language, 'ourTherapies')}
+          </h1>
+          <p className="text-muted-foreground max-w-2xl mx-auto mb-10 text-sm md:text-base">
+            {getTranslation(language, 'exploreTherapiesDesc')}
+          </p>
+
+          {/* Search */}
+          <div className="relative max-w-lg mx-auto">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+            <input
+              type="text"
+              placeholder={getTranslation(language, 'searchPlaceholder')}
+              className="w-full pl-12 pr-12 py-4 rounded-full border border-border bg-background text-foreground shadow-lg focus:outline-none focus:ring-2 focus:ring-primary/40 text-base"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            {search && (
+              <button onClick={() => setSearch("")} className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <X size={18} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* ── Category Filter / Scroll Tabs ── */}
+        {!isSearching && (
+          <div className="max-w-7xl mx-auto px-4 md:px-8 pb-0 overflow-x-auto hide-scrollbar">
+            <div className="flex gap-2 min-w-max pb-0">
+              {CATS.map((cat) => {
+                const Icon = cat.icon;
+                return (
                   <button
-                    key={cat}
-                    onClick={() => { setSelectedCategory(cat); setSearchQuery(""); }}
-                    className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all ${selectedCategory === cat ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+                    key={cat.key}
+                    onClick={() => {
+                      const el = document.getElementById(`cat-${cat.key}`);
+                      if (el) {
+                        const y = el.getBoundingClientRect().top + window.scrollY - 100;
+                        window.scrollTo({ top: y, behavior: 'smooth' });
+                      }
+                    }}
+                    className="flex items-center gap-2 px-5 py-3 rounded-t-xl text-sm font-semibold transition-all duration-200 border-b-2 bg-transparent border-transparent text-muted-foreground hover:text-foreground hover:bg-background/60"
                   >
-                    {cat}
+                    <div className={`w-6 h-6 rounded-lg bg-gradient-to-br ${cat.gradient} flex items-center justify-center flex-shrink-0`}>
+                      <Icon size={13} className="text-white" />
+                    </div>
+                    {getTranslation(language, cat.tKey)}
                   </button>
-                ))}
-              </div>
+                );
+              })}
             </div>
           </div>
-          
-          {error && <div className="text-center text-destructive p-4 bg-destructive/10 rounded-xl mb-8">Failed to load treatments. Please try again.</div>}
-          
-          {loading && treatments.length === 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
-            </div>
-          ) : (
-            <>
-              {groupedTreatments ? (
-                // Grouped View (All Categories)
-                <div className="space-y-16">
-                  {groupedTreatments.map((group, groupIndex) => (
-                    <motion.div 
-                      key={group.categoryName}
-                      initial="hidden"
-                      whileInView="visible"
-                      viewport={{ once: true, margin: "-50px" }}
-                      variants={fadeUp}
-                    >
-                      <div className="mb-6 border-b border-border pb-3 flex items-center justify-between">
-                        <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground">{group.categoryName}</h2>
-                        <span className="text-muted-foreground text-sm font-medium bg-muted px-3 py-1 rounded-full">{group.items.length} Therapies</span>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {group.items.map((t, i) => (
-                          <motion.div 
-                            key={t.treatmentId || t._id} 
-                            variants={fadeUp} 
-                            custom={i}
-                          >
-                            <Link to={`/treatments/${t.treatmentId}`} className="group block bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-border/50 h-full flex flex-col">
-                              <div className="aspect-[4/3] overflow-hidden relative">
-                                <img src={t.image} alt={t.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                              </div>
-                              <div className="p-6 flex-1 flex flex-col">
-                                <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1 rounded-full self-start">{t.category}</span>
-                                <h3 className="font-display text-xl font-semibold text-foreground mt-3 mb-2 group-hover:text-primary transition-colors">{t.title}</h3>
-                                <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2 flex-grow">{t.shortDescription}</p>
-                                <span className="inline-block mt-4 text-primary text-sm font-medium group-hover:underline">Know More →</span>
-                              </div>
-                            </Link>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              ) : (
-                // Filtered/List View
-                filteredTreatments.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground bg-card rounded-2xl border border-border max-w-xl mx-auto">
-                    <p className="text-lg">No treatments found matching your filters.</p>
-                    <button onClick={() => { setSearchQuery(""); setSelectedCategory("All"); }} className="text-primary mt-3 font-medium hover:underline">Clear filters</button>
-                  </div>
-                ) : (
-                  <div>
-                    {selectedCategory !== "All" && !searchQuery && (
-                      <motion.div 
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-card p-8 rounded-2xl shadow-sm border border-border mb-10 text-left"
-                      >
-                        <h2 className="font-display text-3xl font-bold text-foreground mb-4">About {selectedCategory}</h2>
-                        <div className="text-muted-foreground md:text-lg leading-relaxed">
-                          {
-                            selectedCategory === "PANCHKARMA (MAIN DETOX THERAPIES)" ? (
-                              <div className="space-y-8 mt-2">
-                                <div className="text-foreground text-lg border-l-4 border-primary pl-4 py-1 italic">
-                                  "Panchakarma literally translates to 'Five Actions' in Sanskrit. It is Ayurveda's ultimate purification protocol designed to cleanse deep-seated toxins and restore the exact balance of your doshas."
-                                </div>
-                                
-                                <div>
-                                  <h3 className="text-xl font-display font-semibold text-foreground mb-4 flex items-center gap-2">
-                                    <Leaf className="text-primary w-5 h-5" /> The Three Stages of Detoxification
-                                  </h3>
-                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="bg-primary/5 p-5 rounded-xl border border-primary/10">
-                                      <h4 className="font-semibold text-primary mb-2">1. Purvakarma</h4>
-                                      <p className="text-sm">Preparatory stage using internal and external oleation (Snehana) and sweating (Swedana) to dislodge toxins.</p>
-                                    </div>
-                                    <div className="bg-primary/5 p-5 rounded-xl border border-primary/10">
-                                      <h4 className="font-semibold text-primary mb-2">2. Pradhankarma</h4>
-                                      <p className="text-sm">The 5 main therapies to eliminate the toxins (Vaman, Virechan, Basti, Nasya, and Raktamokshan).</p>
-                                    </div>
-                                    <div className="bg-primary/5 p-5 rounded-xl border border-primary/10">
-                                      <h4 className="font-semibold text-primary mb-2">3. Paschatkarma</h4>
-                                      <p className="text-sm">Post-therapy restorative diet and lifestyle regimen to rebuild strength and massive digestive capacity.</p>
-                                    </div>
-                                  </div>
-                                </div>
+        )}
+      </div>
 
-                                <div className="pt-2">
-                                  <h3 className="text-xl font-display font-semibold text-foreground mb-4 border-b border-border pb-2">
-                                    Key Clinical Benefits
-                                  </h3>
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="flex items-start gap-3">
-                                      <ShieldCheck className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-                                      <div>
-                                        <h4 className="font-medium text-foreground">Eliminates Root Disease</h4>
-                                        <p className="text-sm mt-1">Expels deep-seated metabolic toxins (Ama) from tissues rather than just suppressing symptoms.</p>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-start gap-3">
-                                      <Droplets className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-                                      <div>
-                                        <h4 className="font-medium text-foreground">Reverses Cellular Aging</h4>
-                                        <p className="text-sm mt-1">Clears micro-channels, bringing vital nutrients to aging cells and giving a glowing complexion.</p>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-start gap-3">
-                                      <Activity className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-                                      <div>
-                                        <h4 className="font-medium text-foreground">Resets Digestion (Agni)</h4>
-                                        <p className="text-sm mt-1">Radically restores gut flora, eliminating acidity, IBS, and chronic constipation.</p>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-start gap-3">
-                                      <CheckCircle2 className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-                                      <div>
-                                        <h4 className="font-medium text-foreground">Balances Hormones Naturally</h4>
-                                        <p className="text-sm mt-1">Normalizes the endocrine system, immensely benefiting PCOS and thyroid dysfunction.</p>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-start gap-3">
-                                      <Zap className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-                                      <div>
-                                        <h4 className="font-medium text-foreground">Enhances Mental Clarity</h4>
-                                        <p className="text-sm mt-1">Clears chaotic neural pathways, instantly decreasing anxiety, stress, and insomnia.</p>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-start gap-3">
-                                      <ShieldCheck className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-                                      <div>
-                                        <h4 className="font-medium text-foreground">Boosts Immunity (Ojas)</h4>
-                                        <p className="text-sm mt-1">Increases your natural defenses against viral or biological agents.</p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            ) :
-                            selectedCategory === "SKIN & ADVANCED FACIAL TREATMENTS" ? <p>These treatments focus on skin rejuvenation, anti-aging, acne control, and glow enhancement. They help in removing dead skin, reducing pigmentation, tightening pores, and improving overall skin texture using advanced dermatological techniques.</p> :
-                            selectedCategory === "HAIR & SCALP TREATMENTS" ? <p>These treatments are designed for hair fall control, hair regrowth, dandruff treatment, and scalp nourishment. They improve blood circulation, activate hair follicles, and strengthen roots naturally and scientifically.</p> :
-                            selectedCategory === "OTHER PANCHKARMA & SUPPORTIVE THERAPIES" ? <p>These therapies support Panchkarma by providing relaxation, pain relief, stress reduction, and rejuvenation. They improve circulation, detox through sweating, strengthen joints, and calm the nervous system.</p> :
-                            selectedCategory === "WEIGHT LOSS & BODY DETOX" ? <p>These treatments help in weight management, inch loss, and body shaping. They remove toxins, improve digestion, and enhance metabolism for sustainable results.</p> :
-                            selectedCategory === "WELLNESS, WOMEN & IMMUNITY CARE" ? <p>This category focuses on holistic health, hormonal balance, fertility support, child immunity, and mental wellness. It promotes long-term health, disease prevention, and overall well-being.</p> :
-                            <p>Explore our comprehensive sequence of {selectedCategory} healing treatments.</p>
-                          }
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-10">
+
+        {/* ── Search Results ── */}
+        {isSearching ? (
+          <div className="mb-20">
+            <div className="flex items-center justify-between mb-8">
+              <p className="text-base text-muted-foreground">
+                <span className="font-bold text-foreground text-lg">{searchResults.length}</span> {getTranslation(language, 'resultsFor')} "{search}"
+              </p>
+              <button onClick={() => setSearch("")} className="text-primary text-sm font-medium hover:underline flex items-center gap-1">
+                <X size={14} /> {getTranslation(language, 'clearSearch')}
+              </button>
+            </div>
+            {searchResults.length === 0 ? (
+              <div className="text-center py-20 bg-card rounded-3xl border border-border">
+                <p className="text-muted-foreground text-lg mb-3">{getTranslation(language, 'noTreatments')}</p>
+                <button onClick={() => setSearch("")} className="text-primary font-semibold hover:underline">{getTranslation(language, 'viewAll')}</button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {searchResults.map((t, i) => {
+                  const cat = CATS.find(c => c.key === t.category) ?? CATS[0];
+                  return <TreatmentCard key={t.treatmentId} t={t} i={i} catConfig={cat} />;
+                })}
+              </div>
+            )}
+          </div>
+        ) : (
+          /* ── Sequential Category View ── */
+          <div className="space-y-24">
+            {CATS.map((activeCat, index) => {
+              const mainCat = allTreatments.find(t => t.category === activeCat.key && t.isMainCategory);
+              const subTreatments = allTreatments.filter(t => t.category === activeCat.key && !t.isMainCategory);
+
+              if (!mainCat) return null;
+
+              return (
+                <motion.section 
+                  key={activeCat.key}
+                  id={`cat-${activeCat.key}`}
+                  variants={sectionVariant}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, margin: "-100px" }}
+                  className="scroll-mt-24"
+                >
+                  {/* Main Category Banner */}
+                  <div className={`relative rounded-3xl overflow-hidden border shadow-sm ${activeCat.border} ${activeCat.soft} mb-10`}>
+                    <div className="flex flex-col lg:flex-row gap-0">
+                      
+                      {/* Banner Info */}
+                      <div className="flex-1 p-8 md:p-12 flex flex-col justify-center order-2 lg:order-1">
+                        <div className="flex items-center gap-4 mb-4">
+                          <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${activeCat.gradient} flex items-center justify-center shadow-md`}>
+                            {(() => {
+                              const ActiveCatIcon = activeCat.icon;
+                              return <ActiveCatIcon size={26} className="text-white" />;
+                            })()}
+                          </div>
+                          <div>
+                            <p className={`text-sm font-bold uppercase tracking-[0.15em] ${activeCat.text} mb-1`}>
+                              {getTranslation(language, 'catLabel')} {index + 1}
+                            </p>
+                            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground leading-tight">
+                              {(language === 'hi' && mainCat.titleHi) ? mainCat.titleHi : mainCat.title}
+                            </h2>
+                          </div>
                         </div>
-                      </motion.div>
-                    )}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <AnimatePresence>
-                      {filteredTreatments.map((t, i) => (
-                        <motion.div 
-                          layout
-                          key={t.treatmentId || t._id} 
-                          initial={{ opacity: 0, scale: 0.9 }} 
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.9 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <Link to={`/treatments/${t.treatmentId}`} className="group block bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-border/50 h-full flex flex-col">
-                            <div className="aspect-[4/3] overflow-hidden relative">
-                              <img src={t.image} alt={t.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                            </div>
-                            <div className="p-6 flex-1 flex flex-col">
-                              <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1 rounded-full self-start">{t.category}</span>
-                              <h3 className="font-display text-xl font-semibold text-foreground mt-3 mb-2 group-hover:text-primary transition-colors">{t.title}</h3>
-                              <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2 flex-grow">{t.shortDescription}</p>
-                              <span className="inline-block mt-4 text-primary text-sm font-medium group-hover:underline">Know More →</span>
-                            </div>
-                          </Link>
-                        </motion.div>
+                        <p className={`text-base font-medium ${activeCat.text} mb-4`}>
+                          {activeCat.tagline}
+                        </p>
+                        <p className="text-muted-foreground text-base leading-relaxed mb-8 max-w-2xl">
+                          {(language === 'hi' && mainCat.descriptionHi) ? mainCat.descriptionHi : mainCat.description}
+                        </p>
+                        
+                        <div className="flex flex-wrap gap-2 mb-8">
+                          {(((language === 'hi' && mainCat.benefitsHi && mainCat.benefitsHi.length > 0) ? mainCat.benefitsHi : mainCat.benefits) || []).slice(0, 4).map(b => (
+                            <span key={b} className={`text-sm font-medium px-4 py-1.5 rounded-full border ${activeCat.border} ${activeCat.text} bg-background/80`}>
+                              {b}
+                            </span>
+                          ))}
+                        </div>
+                        
+                        <Link to={`/treatments/${mainCat.treatmentId}`}>
+                          <Button className={`rounded-full px-8 py-6 text-base shadow-lg hover:shadow-xl transition-all duration-300 font-semibold bg-gradient-to-r ${activeCat.gradient} text-white border-0 hover:scale-105 group/btn`}>
+                            {getTranslation(language, 'knowMore')} <ArrowRight size={18} className="ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                          </Button>
+                        </Link>
+                      </div>
+
+                      {/* Banner Image */}
+                      <div className="lg:w-[45%] aspect-video lg:aspect-auto relative order-1 lg:order-2">
+                        <img 
+                          src={mainCat.image} 
+                          alt={mainCat.title} 
+                          className="w-full h-full object-cover" 
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-l from-transparent via-transparent to-black/10 mix-blend-multiply" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sub-treatments Grid for this Category */}
+                  <div className="px-2">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className={`w-1 h-6 rounded-full bg-gradient-to-b ${activeCat.gradient}`} />
+                      <h3 className="font-display text-2xl font-bold text-foreground">
+                        {getTranslation(language, 'allTherapies', (language === 'hi' && mainCat.titleHi) ? mainCat.titleHi : mainCat.title)}
+                      </h3>
+                      <span className={`text-sm font-bold px-2.5 py-0.5 rounded-full ${activeCat.soft} ${activeCat.text} ${activeCat.border} border`}>
+                        {subTreatments.length}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      {subTreatments.map((t, i) => (
+                        <TreatmentCard key={t.treatmentId} t={t} i={i} catConfig={activeCat} />
                       ))}
-                    </AnimatePresence>
+                    </div>
                   </div>
-                  </div>
-                )
-              )}
-            </>
-          )}
-        </div>
-      </section>
+
+                  {/* Separator if not last */}
+                  {index < CATS.length - 1 && (
+                    <div className="w-full flex justify-center mt-24">
+                      <div className="w-24 h-1 rounded-full bg-border/50" />
+                    </div>
+                  )}
+                </motion.section>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

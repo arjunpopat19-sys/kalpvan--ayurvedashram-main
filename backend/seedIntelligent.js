@@ -2,322 +2,662 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 const Treatment = require('./models/Treatment');
 
-const fallbackImages = [
-    "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=400&q=80",
-    "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=400&q=80",
-    "https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?auto=format&fit=crop&w=400&q=80",
-    "https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?auto=format&fit=crop&w=400&q=80",
-    "https://images.unsplash.com/photo-1552693673-1bf958298935?auto=format&fit=crop&w=400&q=80"
-];
+const img = {
+  skin:   "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=800&q=80",
+  hair:   "https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=800&q=80",
+  detox:  "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=800&q=80",
+  massage:"https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=800&q=80",
+  weight: "https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=800&q=80",
+  women:  "https://images.unsplash.com/photo-1527799822394-46e730304675?auto=format&fit=crop&w=800&q=80",
+  misc1:  "https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?auto=format&fit=crop&w=800&q=80",
+  misc2:  "https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&fit=crop&w=800&q=80",
+  misc3:  "https://images.unsplash.com/photo-1552693673-1bf958298935?auto=format&fit=crop&w=800&q=80",
+  misc4:  "https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?auto=format&fit=crop&w=800&q=80",
+  misc5:  "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=800&q=80",
+  misc6:  "https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=800&q=80",
+  misc7:  "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80",
+};
 
-const getImage = (idx) => fallbackImages[idx % fallbackImages.length];
+const treatments = [
+  // ── 1. SKIN & ADVANCED FACIAL TREATMENTS ────────────────────────────────
+  {
+    treatmentId: "cat-skin", isMainCategory: true,
+    title: "Skin & Advanced Facial Treatments",
+    category: "SKIN & ADVANCED FACIAL TREATMENTS",
+    image: img.skin, duration: "Variable",
+    shortDescription: "Customized Treatment • Ayurvedic Care • Safe for All Skin Types",
+    description: "Restore your skin's natural beauty with safe and effective Ayurvedic facial therapies. Our customized treatments help reduce acne, pigmentation, dullness, fine lines, and uneven skin tone while improving overall skin health—without harsh chemicals.",
+    benefits: ["Deep Skin Rejuvenation", "Acne & Pigmentation Control", "Natural Glow Enhancement", "Anti-Ageing Support", "Improved Skin Texture", "Pore Tightening & Hydration"],
+    whoCanBenefit: ["Acne & Pimples", "Pigmentation & Dark Spots", "Dull Skin", "Fine Lines & Wrinkles", "Uneven Skin Tone", "Open Pores", "Sun Damage", "Dry or Oily Skin"],
+    whyChooseUs: ["Experienced Ayurvedic Specialists", "Personalized Treatment Plans", "Safe & Hygienic Environment", "Premium Herbal Products", "Modern Diagnostic Approach", "Holistic Skin Care with Long-Term Results"],
+    process: [
+      { name: "Comprehensive Skin Assessment", description: "We carefully assess your skin condition, lifestyle, and concerns to identify the most suitable treatment approach." },
+      { name: "Personalized Ayurvedic Protocol", description: "A customized combination of Ayurvedic therapies and herbal formulations is selected to meet your skin's specific needs." },
+      { name: "Expert Treatment", description: "Your therapy is carried out in a clean, comfortable environment using safe, high-quality Ayurvedic products and modern techniques where appropriate." },
+      { name: "Recovery & Skin Maintenance", description: "We provide personalized aftercare instructions and skincare recommendations to help you achieve healthy, glowing, long-lasting results." }
+    ]
+  },
+  {
+    treatmentId: "microdermabrasion", isMainCategory: false,
+    title: "Microdermabrasion",
+    category: "SKIN & ADVANCED FACIAL TREATMENTS",
+    image: img.misc1, duration: "45 min",
+    shortDescription: "Non-invasive skin resurfacing to remove dead skin cells and stimulate collagen.",
+    description: "Microdermabrasion is a non-invasive skin resurfacing treatment that gently exfoliates the outermost layer of dead skin cells, stimulating collagen production and revealing fresher, younger-looking skin.",
+    benefits: ["Removes dead skin cells","Stimulates collagen","Reduces fine lines","Evens skin tone","Minimizes pores","Brightens complexion"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
+    process: [
+      { name: "Cleansing", description: "Deep cleansing of the face to remove surface impurities." },
+      { name: "Exfoliation", description: "Crystal or diamond-tip microdermabrasion to resurface the skin." },
+      { name: "Hydration", description: "Application of calming serums and moisturizers." }
+    ]
+  },
+  {
+    treatmentId: "chemical-peel", isMainCategory: false,
+    title: "Chemical Peel",
+    category: "SKIN & ADVANCED FACIAL TREATMENTS",
+    image: img.skin, duration: "30–60 min",
+    shortDescription: "Clinical skin rejuvenation using specialized acids to resurface and renew skin.",
+    description: "Chemical peels use specially formulated acids to remove damaged outer layers of skin, triggering growth of new, healthier skin cells. They effectively treat hyperpigmentation, acne scars, and uneven skin texture.",
+    benefits: ["Reduces hyperpigmentation","Smooths skin texture","Clears acne scars","Anti-aging effects","Even skin tone","Boosts radiance"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
+    process: [
+      { name: "Skin Prep", description: "Cleansing and prepping the skin with a pH balancer." },
+      { name: "Peel Application", description: "Careful application of the appropriate peel for your skin type." },
+      { name: "Neutralization", description: "Neutralizing the peel and applying soothing post-care." }
+    ]
+  },
+  {
+    treatmentId: "ozone-face", isMainCategory: false,
+    title: "Ozone Therapy (Face)",
+    category: "SKIN & ADVANCED FACIAL TREATMENTS",
+    image: img.misc2, duration: "30 min",
+    shortDescription: "Detoxifying skin and enhancing facial oxygenation with medical-grade ozone.",
+    description: "Facial Ozone Therapy uses medical-grade ozone to kill bacteria and fungi on skin while boosting oxygen levels in skin cells. It deeply detoxifies and gives the complexion a healthy, oxygenated glow.",
+    benefits: ["Deep detoxification","Kills acne bacteria","Boosts skin oxygenation","Accelerates healing","Reduces redness","Natural antibacterial"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
+    process: [
+      { name: "Cleansing", description: "Removal of all surface impurities." },
+      { name: "Ozone Application", description: "Controlled medical ozone directed over the facial skin." },
+      { name: "Moisturization", description: "Sealing in benefits with a hydrating finish." }
+    ]
+  },
+  {
+    treatmentId: "ultrasonic", isMainCategory: false,
+    title: "Ultrasonic Treatment",
+    category: "SKIN & ADVANCED FACIAL TREATMENTS",
+    image: img.misc7, duration: "45 min",
+    shortDescription: "High-frequency sound waves for deep cleansing, skin firming, and rejuvenation.",
+    description: "Ultrasonic Treatment uses high-frequency sound waves that penetrate deep into the skin, promoting cellular renewal, increasing product absorption, and stimulating collagen production.",
+    benefits: ["Deep pore cleansing","Firms sagging skin","Boosts product absorption","Stimulates collagen","Non-invasive facelift","Reduces fine lines"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
+    process: [
+      { name: "Skin Cleansing", description: "Thorough cleansing to prepare the skin surface." },
+      { name: "Ultrasonic Wave Application", description: "Device passes ultrasonic waves to deep-cleanse and lift the skin." },
+      { name: "Serum Infusion", description: "High-frequency waves drive active serums deep into the dermal layers." }
+    ]
+  },
+  {
+    treatmentId: "jet-peel", isMainCategory: false,
+    title: "Jet Peel",
+    category: "SKIN & ADVANCED FACIAL TREATMENTS",
+    image: img.misc3, duration: "45 min",
+    shortDescription: "High-pressure saline and oxygen jet for exfoliation, hydration, and rejuvenation.",
+    description: "Jet Peel uses a supersonic jet of saline and oxygen to exfoliate dead skin, deeply hydrate, and infuse active ingredients painlessly. It immediately brightens the complexion and plumps fine lines.",
+    benefits: ["Instant brightening","Deep hydration","Pain-free exfoliation","No downtime","Plumps fine lines","Infuses active ingredients"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
+    process: [
+      { name: "Saline Jet Exfoliation", description: "High-pressure saline removes dead skin and unclogs pores." },
+      { name: "Oxygen Infusion", description: "Pure oxygen is delivered simultaneously to revitalize cells." },
+      { name: "Active Serum Delivery", description: "Customized serums are jetted directly into the skin." }
+    ]
+  },
+  {
+    treatmentId: "light-therapy", isMainCategory: false,
+    title: "Light Therapy",
+    category: "SKIN & ADVANCED FACIAL TREATMENTS",
+    image: img.misc6, duration: "20–30 min",
+    shortDescription: "LED light treatments targeting specific skin concerns like acne, aging, and redness.",
+    description: "LED Light Therapy uses specific wavelengths of light to penetrate the skin at varying depths, targeting acne (blue light), aging (red light), and healing (near-infrared). Painless with zero downtime.",
+    benefits: ["Clears acne bacteria","Boosts collagen production","Reduces inflammation","Speeds healing","Minimizes redness","Non-invasive & painless"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
+    process: [
+      { name: "Skin Assessment", description: "Choosing the right LED wavelength for your primary skin concern." },
+      { name: "LED Session", description: "Exposure to targeted LED light for 20-30 minutes." },
+      { name: "Post-Treatment Care", description: "Application of a calming moisturizer and SPF." }
+    ]
+  },
 
-const therapiesData = [
-  // 1. Panchkarma Treatments
-  { 
-    category: "Panchkarma Treatments", title: "Snehan (Oil Therapy)", id: "snehan", 
-    benefits: ["Nourishes Dhatus (Tissues)", "Removes Vata aggravation", "Improves skin luster", "Prepares body for deep detox"],
-    desc: "A preparatory therapy prior to core Panchakarma using medicated oils administered internally or externally to lubricate tissues.",
-    full: "Snehan is an essential pre-purification therapy in Ayurveda. It utilizes specialized medicated oils administered either internally (Snehapana) or externally (Abhyanga) to deeply lubricate bodily channels. This process softens and liquifies deep-seated toxins (Ama) from bodily tissues, preparing them to be easily expelled during the main Panchakarma detoxification.",
+  // ── 2. HAIR & SCALP TREATMENTS ──────────────────────────────────────────
+  {
+    treatmentId: "cat-hair", isMainCategory: true,
+    title: "Hair & Scalp Treatments",
+    category: "HAIR & SCALP TREATMENTS",
+    image: img.hair, duration: "Variable",
+    shortDescription: "Hair fall control, hair regrowth, and scalp nourishment using scientific and Ayurvedic methods.",
+    description: "These treatments are designed for hair fall control, hair regrowth, dandruff treatment, and scalp nourishment. They improve blood circulation, activate dormant hair follicles, and strengthen roots both naturally and clinically.",
+    benefits: ["Stops hair fall","Stimulates regrowth","Nourishes scalp","Activates follicles","Reduces dandruff","Strengthens hair roots"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
     process: [
-      { name: "Consultation", description: "Assessment of body constitution to select the right medicated oil (Taila/Ghrita)." },
-      { name: "Internal Oleation", description: "Graduated doses of pure medicated ghee or oil consumed early morning." },
-      { name: "External Oleation", description: "Full body synchronized massage (Abhyanga) utilizing warm herbal oils." }
+      { name: "Scalp Analysis", description: "Detailed trichological assessment of the scalp and hair condition." },
+      { name: "Targeted Therapy", description: "Application of the most suitable scientific or Ayurvedic treatment." },
+      { name: "Home Care Guidance", description: "Personalized advice on diet, supplements, and hair care." }
     ]
   },
-  { 
-    category: "Panchkarma Treatments", title: "Swedan (Steam Therapy)", id: "swedan",
-    benefits: ["Relieves muscle stiffness", "Opens sweat channels", "Melts sub-cutaneous toxins", "Reduces heaviness"],
-    desc: "A therapeutic herbal sweat treatment that follows Snehan, used to dilate energetic channels and push toxins to the digestive tract.",
-    full: "Swedana involves introducing heat to the body using steam generated from specific herbal decoctions. Coming right after Snehan, this therapy dilates the micro-channels (Srotas) of the body. The heat acts to melt the oleated toxins, detaching them from the peripheral tissues and forcing them to move towards the gastrointestinal tract for elimination.",
+  {
+    treatmentId: "prp", isMainCategory: false,
+    title: "PRP Therapy",
+    category: "HAIR & SCALP TREATMENTS",
+    image: img.misc5, duration: "60 min",
+    shortDescription: "Platelet-Rich Plasma therapy to naturally stimulate dormant hair follicles.",
+    description: "PRP Therapy involves drawing a small amount of your blood, processing it to concentrate growth factors, and injecting it into the scalp. These growth factors powerfully stimulate dormant hair follicles and promote natural hair growth.",
+    benefits: ["100% natural (own blood)","Stimulates new growth","Increases hair density","Reduces shedding","Minimal downtime","Safe and effective"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
     process: [
-      { name: "Herbal Decoction Prep", description: "Boiling specific roots and leaves customized to the patient's dosha." },
-      { name: "Steam Box Therapy", description: "Patient rests in a wooden steam chamber while maintaining a cool head exterior." },
-      { name: "Assessment", description: "Pulse monitoring to evaluate successful toxin dislodgment." }
+      { name: "Blood Draw", description: "A small amount of blood is drawn and placed in a centrifuge." },
+      { name: "PRP Preparation", description: "Centrifugation concentrates the platelets and growth factors." },
+      { name: "Scalp Injection", description: "PRP is precisely injected into the affected scalp areas." }
     ]
   },
-  { 
-    category: "Panchkarma Treatments", title: "Vaman (Therapeutic Vomiting)", id: "vaman",
-    benefits: ["Expels Kapha toxins", "Clears respiratory system", "Treats deep skin conditions", "Improves digestion/Agni"],
-    desc: "A powerful Kapha-reducing therapy involving medically induced vomiting to clear toxins from the respiratory and upper gastrointestinal tracts.",
-    full: "Vaman is the primary Panchakarma procedure to eliminate accumulated Kapha dosha. After preparatory oleation and fomentation, specific emetic herbs like Madanaphala are given to painlessly induce vomiting. It powerfully flushes out mucus, toxins, and stagnation from the stomach, lungs, and chest, providing unparalleled relief in asthma, chronic cough, psoriasis, and sluggish metabolism.",
+  {
+    treatmentId: "mesotherapy", isMainCategory: false,
+    title: "Mesotherapy",
+    category: "HAIR & SCALP TREATMENTS",
+    image: img.misc3, duration: "45 min",
+    shortDescription: "Micro-injection of vitamins and nutrients directly into the scalp for nourishment.",
+    description: "Mesotherapy for hair involves injecting a customized cocktail of vitamins, minerals, amino acids, and DHT blockers directly into the scalp. This dramatically improves scalp blood flow and stimulates regrowth.",
+    benefits: ["Direct scalp nourishment","Reduces DHT hair loss","Improves circulation","Stimulates follicles","Reduces shedding","Clinically proven"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
     process: [
-      { name: "Kapha Excitation", description: "A Kapha aggravating diet is prescribed a day prior to consolidate toxins." },
-      { name: "Herb Administration", description: "Consumption of medicated decoctions early morning on an empty stomach." },
-      { name: "Emesis Phase", description: "Carefully monitored emesis (vomiting) supervised until Pitta (bile) is observed, signaling successful clearance." },
-      { name: "Samsarjana Krama", description: "A strict step-by-step diet protocol starting with liquid rice gruel." }
+      { name: "Scalp Prep", description: "Cleansing the scalp and applying topical numbing if required." },
+      { name: "Cocktail Preparation", description: "Customizing the vitamin and nutrient blend for your hair loss type." },
+      { name: "Micro-injections", description: "Precise micro-injections across the affected scalp zones." }
     ]
   },
-  { 
-    category: "Panchkarma Treatments", title: "Virechan (Purgation Therapy)", id: "virechan",
-    benefits: ["Flushes Pitta from liver/gallbladder", "Purifies blood", "Clears acne and rashes", "Relieves hyperacidity"],
-    desc: "A controlled purgation treatment designed to eliminate excess Pitta dosha and toxins from the liver and gallbladder.",
-    full: "Virechana is a medicated purgation therapy specifically targeting the lower gastrointestinal tract, liver, and gallbladder to remove aggravated Pitta. Utilizing natural laxative herbs (like Trivrit or Senna), it securely flushes heat, acidity, and toxic bile out via the bowels. This clears inflammatory conditions, profound skin diseases, hormonal imbalances, and chronic acidity.",
+  {
+    treatmentId: "lllt", isMainCategory: false,
+    title: "LLLT (Low-Level Laser Therapy)",
+    category: "HAIR & SCALP TREATMENTS",
+    image: img.misc5, duration: "20–30 min",
+    shortDescription: "Low-level laser light to boost cellular metabolism and stimulate hair regrowth.",
+    description: "LLLT uses specific wavelengths of low-intensity laser light to stimulate hair follicle cells, boost cellular metabolism, and extend the anagen (growth) phase of the hair cycle.",
+    benefits: ["Painless and non-invasive","Boosts cellular metabolism","Extends hair growth phase","Increases hair density","No side effects","FDA-cleared technology"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
+    process: [
+      { name: "Scalp Prep", description: "Hair is parted and scalp cleaned for maximum laser penetration." },
+      { name: "Laser Application", description: "Low-level laser device applied across the scalp for 20-30 minutes." },
+      { name: "Post-Session Care", description: "Instructions on maintenance for optimal results." }
+    ]
+  },
+  {
+    treatmentId: "ozone-hair", isMainCategory: false,
+    title: "Ozone Hair Therapy",
+    category: "HAIR & SCALP TREATMENTS",
+    image: img.misc2, duration: "30 min",
+    shortDescription: "Scalp detoxification and infection control using medical-grade ozone.",
+    description: "Ozone Hair Therapy delivers medical-grade ozone to the scalp to eliminate fungal infections, dandruff, and scalp inflammation while increasing oxygen levels in hair follicles.",
+    benefits: ["Eliminates scalp infections","Reduces severe dandruff","Oxygenates follicles","Anti-inflammatory","Detoxifies scalp","Promotes healthier growth"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
+    process: [
+      { name: "Scalp Analysis", description: "Checking for scalp infections, dandruff type, and inflammation." },
+      { name: "Ozone Application", description: "Medical ozone delivered to the scalp via specialized cap." },
+      { name: "Follow-up", description: "Scalp massage with nourishing oils to seal in the benefits." }
+    ]
+  },
+  {
+    treatmentId: "air-hair", isMainCategory: false,
+    title: "Advanced Hair Regrowth (AIR)",
+    category: "HAIR & SCALP TREATMENTS",
+    image: img.misc3, duration: "90 min",
+    shortDescription: "Comprehensive multi-modality treatment combining best techniques for maximum regrowth.",
+    description: "AIR is our signature protocol combining PRP, mesotherapy, LLLT, and Ayurvedic scalp therapies in a single comprehensive session for cases of significant hair thinning or baldness.",
+    benefits: ["Maximum follicle activation","Combines multiple modalities","Treats severe hair loss","Increases density dramatically","Holistic & scientific","Long-lasting results"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
+    process: [
+      { name: "Comprehensive Assessment", description: "Full trichological analysis to map hair loss zones and severity." },
+      { name: "Multi-modal Therapy", description: "Sequential application of LLLT, scalp prep, and PRP/Mesotherapy." },
+      { name: "Ayurvedic Finishing", description: "Herbal oil application to soothe and nourish post-procedure." }
+    ]
+  },
+
+  // ── 3. PANCHKARMA (MAIN DETOX THERAPIES) ───────────────────────────────
+  {
+    treatmentId: "cat-panchkarma", isMainCategory: true,
+    title: "Panchkarma (Main Detox Therapies)",
+    category: "PANCHKARMA (MAIN DETOX THERAPIES)",
+    image: img.detox, duration: "7–14 days",
+    shortDescription: "Ayurveda's five core detoxification therapies to cleanse, balance, and rejuvenate.",
+    description: "Panchakarma is Ayurveda's ultimate purification protocol. The five primary procedures — Vaman, Virechan, Basti, Nasya, and Raktamokshan — cleanse deep-seated toxins (Ama), restore dosha balance, and treat chronic diseases from the root.",
+    benefits: ["Eliminates deep-seated toxins","Balances all three doshas","Treats root cause of disease","Reverses cellular aging","Resets digestion (Agni)","Boosts immunity (Ojas)"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
+    process: [
+      { name: "Purvakarma (Preparation)", description: "Preparatory stage using internal and external oleation (Snehana) and sweating (Swedana)." },
+      { name: "Pradhankarma (Main Therapies)", description: "The 5 main Panchakarma procedures as per the patient's constitution." },
+      { name: "Paschatkarma (Restoration)", description: "Post-therapy diet, lifestyle guidance, and Rasayana (rejuvenation)." }
+    ]
+  },
+  {
+    treatmentId: "vaman", isMainCategory: false,
+    title: "Vaman (Therapeutic Vomiting)",
+    category: "PANCHKARMA (MAIN DETOX THERAPIES)",
+    image: img.massage, duration: "1 day",
+    shortDescription: "Medically guided therapeutic emesis to expel Kapha toxins from the body.",
+    description: "Vaman is the primary Panchakarma procedure to eliminate accumulated Kapha dosha using specific emetic herbs. It powerfully flushes out mucus, toxins, and stagnation from the stomach, lungs, and chest.",
+    benefits: ["Expels Kapha toxins","Clears respiratory system","Treats chronic asthma","Improves digestion (Agni)","Clears skin conditions","Reduces obesity"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
+    process: [
+      { name: "Kapha Excitation", description: "A Kapha-aggravating diet prescribed a day prior." },
+      { name: "Herb Administration", description: "Consumption of medicated decoctions early morning." },
+      { name: "Emesis Phase", description: "Carefully monitored emesis supervised by the physician." },
+      { name: "Samsarjana Krama", description: "Step-by-step diet protocol to restore digestive strength." }
+    ]
+  },
+  {
+    treatmentId: "virechan", isMainCategory: false,
+    title: "Virechan (Purgation Therapy)",
+    category: "PANCHKARMA (MAIN DETOX THERAPIES)",
+    image: img.misc4, duration: "1 day",
+    shortDescription: "Controlled purgation therapy to eliminate excess Pitta and liver toxins.",
+    description: "Virechan is a medicated purgation therapy targeting the lower GI tract, liver, and gallbladder to eliminate aggravated Pitta dosha. It safely flushes heat, acidity, and toxic bile via the bowels.",
+    benefits: ["Flushes Pitta from liver","Purifies blood","Clears acne and rashes","Relieves hyperacidity","Balances hormones","Detoxifies gallbladder"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
     process: [
       { name: "Preparation", description: "Several days of internal oleation followed by a Pitta-soothing diet." },
-      { name: "Purgative Draught", description: "Administration of specific herbal purgatives in the morning." },
-      { name: "Clearance Phase", description: "Mild, painless bowel movements to flush toxins, closely tracked by the physician." },
-      { name: "Restoration Diet", description: "Rebuilding gut flora and digestive fire using traditional broths." }
+      { name: "Purgative Administration", description: "Specific herbal purgatives given in the morning." },
+      { name: "Clearance Phase", description: "Mild, painless bowel movements to flush toxins." },
+      { name: "Restoration Diet", description: "Rebuilding gut flora using traditional broths and light foods." }
     ]
   },
-  { 
-    category: "Panchkarma Treatments", title: "Basti (Medicated Enema)", id: "basti",
-    benefits: ["Balances Vata dosha", "Lubricates colon", "Cures chronic constipation", "Strengthens immunity (Ojas)"],
-    desc: "Considered the mother of all treatments, Basti uses herbal oils and decoctions administered rectally to pacify Vata and nourish tissues.",
-    full: "Basti is heralded as 'Ardha Chikitsa' (half of all treatments) due to its profound healing capacity. It involves the introduction of herbal decoctions (Kashaya Basti) or warm oils (Anuvasana Basti) into the rectum. Since the colon is the primary seat of Vata dosha, this therapy bypasses the upper digestive tract to directly heal neurological conditions, joint pain, osteoporosis, and severe digestive disorders.",
+  {
+    treatmentId: "basti", isMainCategory: false,
+    title: "Basti (Medicated Enema)",
+    category: "PANCHKARMA (MAIN DETOX THERAPIES)",
+    image: img.detox, duration: "1–7 days",
+    shortDescription: "The mother of all treatments — medicated enema for Vata balance and deep healing.",
+    description: "Basti is heralded as 'Ardha Chikitsa' (half of all treatments). Herbal decoctions or warm oils introduced rectally directly heal neurological conditions, joint pain, osteoporosis, and severe digestive disorders.",
+    benefits: ["Balances Vata dosha","Lubricates colon","Cures chronic constipation","Heals neurological disorders","Strengthens immunity (Ojas)","Addresses joint pain"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
     process: [
       { name: "Local Abhyanga", description: "Massage of the abdomen and lower back prior to the procedure." },
       { name: "Enema Administration", description: "Gentle rectal introduction of warm herbal formulations." },
-      { name: "Retention", description: "Resting while the colon absorbs the micro-nutrients and active alkaloids." },
-      { name: "Evacuation", description: "Expulsion of the injected liquid carrying the deep-seated toxins." }
+      { name: "Retention", description: "Resting while the colon absorbs the active alkaloids." },
+      { name: "Evacuation", description: "Expulsion of the liquid carrying deep-seated toxins." }
     ]
   },
-  { 
-    category: "Panchkarma Treatments", title: "Nasya (Nasal Therapy)", id: "nasya",
-    benefits: ["Clears sinuses", "Treats chronic migraines", "Improves memory & vision", "Prevents hair fall"],
-    desc: "Administration of medicated oils or powders through the nasal passages to cleanse and nourish the head, neck, and brain.",
-    full: "In Ayurveda, the nose is considered the doorway to the brain. Nasya involves instilling specialized herbal oils, juices, or powders into the nostrils. This therapy aggressively removes accumulated Kapha toxins from the head and neck region. It is highly effective for chronic sinusitis, migraines, hormonal imbalances, premature graying of hair, and neuro-muscular conditions of the face.",
+  {
+    treatmentId: "nasya", isMainCategory: false,
+    title: "Nasya (Nasal Therapy)",
+    category: "PANCHKARMA (MAIN DETOX THERAPIES)",
+    image: img.misc1, duration: "20–30 min",
+    shortDescription: "Medicated oils via nostrils to cleanse the head, neck, and brain pathways.",
+    description: "In Ayurveda, the nose is the gateway to the brain. Nasya instills specialized herbal oils or powders into the nostrils to remove Kapha toxins from the head and neck region — effective for sinusitis, migraines, and neuro-muscular conditions.",
+    benefits: ["Clears sinuses","Treats chronic migraines","Improves memory & vision","Prevents premature graying","Relieves facial paralysis","Clears brain pathways"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
     process: [
       { name: "Facial Massage", description: "Vigorous facial and head massage to loosen localized toxins." },
-      { name: "Fomentation", description: "Applying mild steam to the face and neck using a herbal towel." },
-      { name: "Instillation", description: "Dropping precise amounts of Anu Taila or Shadbindu oil into each nostril." },
-      { name: "Expulsion", description: "Patient gently spits out the mucus that drains into the throat." }
+      { name: "Fomentation", description: "Applying mild steam to the face and neck." },
+      { name: "Nasal Instillation", description: "Dropping precise amounts of medicated oil into each nostril." },
+      { name: "Expulsion", description: "Patient gently spits out mucus draining into the throat." }
+    ]
+  },
+  {
+    treatmentId: "raktamokshan", isMainCategory: false,
+    title: "Raktamokshan (Blood Purification)",
+    category: "PANCHKARMA (MAIN DETOX THERAPIES)",
+    image: img.misc6, duration: "45–60 min",
+    shortDescription: "Specialized blood purification therapy including leech therapy and other methods.",
+    description: "Raktamokshana is Ayurveda's primary blood purification procedure encompassing leech therapy (Jalaukavacharana), venesection, and cupping — highly effective for skin diseases, varicose veins, and gout.",
+    benefits: ["Purifies blood","Treats skin diseases","Relieves varicose veins","Reduces gout","Clears eczema","Anti-inflammatory effects"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
+    process: [
+      { name: "Method Selection", description: "Choosing the appropriate Raktamokshana method based on the condition." },
+      { name: "Site Preparation", description: "Cleaning and preparing the affected area." },
+      { name: "Procedure", description: "Application of leeches, cupping, or other modality as indicated." },
+      { name: "Post-care", description: "Herbal dressings and dietary guidelines after the procedure." }
     ]
   },
 
-  // 2. Specialized Panchkarma Procedures
-  { 
-    category: "Specialized Panchkarma", title: "Shirodhara", id: "shirodhara",
-    benefits: ["Cures insomnia", "Relieves stress & anxiety", "Treats depression", "Lowers hypertension"],
-    desc: "A deeply relaxing therapy where a continuous, rhythmic stream of warm herbal oil is poured over the forehead.",
-    full: "Shirodhara is a transcendentally relaxing therapy that involves pouring a steady, rhythmic stream of warm medicated oil, herbal decoctions, or buttermilk over the 'Ajna Chakra' (third eye center) on the forehead. This powerfully stimulates the pineal gland, calming the central nervous system. It represents the ultimate Ayurvedic remedy for psychological stress, insomnia, PTSD, and hypertensive disorders.",
+  // ── 4. OTHER PANCHKARMA & SUPPORTIVE THERAPIES ──────────────────────────
+  {
+    treatmentId: "cat-supportive", isMainCategory: true,
+    title: "Other Panchkarma & Supportive Therapies",
+    category: "OTHER PANCHKARMA & SUPPORTIVE THERAPIES",
+    image: img.massage, duration: "Variable",
+    shortDescription: "Relaxation, pain relief, and stress reduction supportive Ayurvedic therapies.",
+    description: "These therapies support Panchkarma by providing relaxation, pain relief, stress reduction, and rejuvenation. They improve circulation, detoxify through sweating, strengthen joints, and calm the nervous system.",
+    benefits: ["Deep relaxation","Pain relief","Improved circulation","Joint strengthening","Nervous system calm","Stress reduction"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
+    process: [
+      { name: "Consultation", description: "Assessment of body constitution and therapeutic goals." },
+      { name: "Therapy Session", description: "Expert administration of the chosen supportive therapy." },
+      { name: "Rest & Integration", description: "Post-therapy relaxation period for maximum benefit absorption." }
+    ]
+  },
+  {
+    treatmentId: "abhyanga", isMainCategory: false,
+    title: "Abhyanga (Full Body Oil Massage)",
+    category: "OTHER PANCHKARMA & SUPPORTIVE THERAPIES",
+    image: img.misc4, duration: "60 min",
+    shortDescription: "Synchronized full-body warm oil massage tailored to your dosha.",
+    description: "Classical Ayurvedic Abhyanga is a synchronized full-body massage using warm medicated oils selected for your dosha. It directs toxins towards the lymphatic system while deeply nourishing the skin and muscles.",
+    benefits: ["Improves circulation","Enhances sleep quality","Soothes nervous system","Tones muscles","Delays aging","Removes fatigue"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
+    process: [
+      { name: "Oil Selection", description: "Determining the correct base oil (Sesame/Coconut/Mustard) based on your dosha." },
+      { name: "Synchronized Strokes", description: "Full-body sequential strokes following specific Marma (vital) points." },
+      { name: "Steam Session", description: "Followed by a herbal steam session to ensure deep oil penetration." }
+    ]
+  },
+  {
+    treatmentId: "swedan", isMainCategory: false,
+    title: "Swedan (Steam Therapy)",
+    category: "OTHER PANCHKARMA & SUPPORTIVE THERAPIES",
+    image: img.misc3, duration: "30 min",
+    shortDescription: "Therapeutic herbal steam to mobilize toxins and open body channels.",
+    description: "Swedana introduces heat via steam from specific herbal decoctions. It dilates the micro-channels (Srotas) of the body, melts oleated toxins, and forces them towards the GI tract for elimination.",
+    benefits: ["Opens body channels","Relieves muscle stiffness","Mobilizes toxins","Reduces heaviness","Improves skin luster","Prepares for deeper therapies"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
+    process: [
+      { name: "Herbal Decoction Prep", description: "Boiling specific roots and leaves customized to the patient's dosha." },
+      { name: "Steam Chamber", description: "Patient rests in a wooden steam box with the head kept cool outside." },
+      { name: "Assessment", description: "Pulse monitoring to evaluate successful toxin dislodgment." }
+    ]
+  },
+  {
+    treatmentId: "shirodhara", isMainCategory: false,
+    title: "Shirodhara",
+    category: "OTHER PANCHKARMA & SUPPORTIVE THERAPIES",
+    image: img.detox, duration: "60 min",
+    shortDescription: "Continuous rhythmic stream of warm oil poured over the forehead for deep nervous calm.",
+    description: "Shirodhara involves a steady, rhythmic stream of warm medicated oil poured over the 'Ajna Chakra' (third eye) on the forehead. It powerfully calms the central nervous system — the ultimate remedy for insomnia, anxiety, and hypertension.",
+    benefits: ["Cures insomnia","Relieves stress & anxiety","Treats depression","Lowers blood pressure","Calms nervous system","Improves focus & memory"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
     process: [
       { name: "Head Massage", description: "Initial light massage of the scalp to induce relaxation." },
       { name: "Therapy Setup", description: "Resting supine while a traditional copper vessel is aligned over the forehead." },
-      { name: "Continuous Pour", description: "A steady oscillation of warm oil across the forehead for 45-60 minutes." }
+      { name: "Continuous Pour", description: "A steady oscillating stream of warm oil across the forehead for 45-60 minutes." }
     ]
   },
-  { 
-    category: "Specialized Panchkarma", title: "Abhyanga (Body Massage)", id: "abhyanga",
-    benefits: ["Improves circulation", "Enhances sleep quality", "Soothes nervous system", "Tones somatic muscles"],
-    desc: "A synchronized full-body massage using warm herbal oils selected specifically for your dominant dosha.",
-    full: "Classical Ayurvedic Abhyanga is unlike standard massages; it focuses on directing toxins towards the lymphatic system for elimination while deeply nourishing the skin and muscles. The warm oils are deeply rubbed into the physical body in specific energetic strokes corresponding to blood flow. It dramatically delays aging, resolves fatigue, and pacifies chaotic Vata dosha.",
+  {
+    treatmentId: "udwartan", isMainCategory: false,
+    title: "Udwartan (Herbal Powder Massage)",
+    category: "OTHER PANCHKARMA & SUPPORTIVE THERAPIES",
+    image: img.misc2, duration: "45 min",
+    shortDescription: "Vigorous upward-stroking massage with dry herbal powders to tone and detoxify.",
+    description: "Udwartana is a therapeutic skin exfoliation and lymphatic drainage massage using specific dry herbal powders. Brisk upward strokes generate therapeutic heat that directly melts subcutaneous fat and reduces cellulite.",
+    benefits: ["Reduces cellulite","Breaks down fat","Exfoliates skin","Invigorates circulation","Tones the body","Aids weight loss"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
     process: [
-      { name: "Oil Selection", description: "Determination of the correct base oil (Sesame/Coconut/Mustard) based on conditions." },
-      { name: "Synchronized Strokes", description: "Full-body sequential strokes following specific Marma (vital) points." },
-      { name: "Sweat Induction", description: "Followed by a mild steam session to ensure oil penetration." }
+      { name: "Powder Heating", description: "Specific herbal powders are gently roasted to increase their efficacy." },
+      { name: "Friction Massage", description: "Therapists apply brisk upward strokes to generate therapeutic heat." },
+      { name: "Cleansing", description: "A hot water bath to remove the herbal paste, leaving skin smooth." }
     ]
   },
-  { 
-    category: "Specialized Panchkarma", title: "Kati Basti", id: "kati-basti",
-    benefits: ["Heals slipped discs", "Treats chronic lower back pain", "Lubricates spinal joints", "Eases sciatica"],
-    desc: "A localized treatment where warm medicated oil is pooled over the lower back using a dough ring.",
-    full: "Kati Basti specifically targets chronic ailments of the lumbar spine. A boundary made of black gram dough is constructed over the lumbosacral area. Warm, deeply penetrating herbal oils like Mahanarayan Taila are poured into this reservoir and maintained at a constant temperature. This forces the healing herbs directly into the spinal discs and nerve roots, drastically healing sciatica and disc degeneration.",
+  {
+    treatmentId: "joint-basti", isMainCategory: false,
+    title: "Kati Basti / Janu Basti",
+    category: "OTHER PANCHKARMA & SUPPORTIVE THERAPIES",
+    image: img.misc6, duration: "45 min",
+    shortDescription: "Localized therapeutic warm oil pooling over the lower back or knee joints.",
+    description: "Kati Basti targets the lumbar spine while Janu Basti focuses on the knee. Warm deeply-penetrating herbal oils pooled in a dough ring force healing herbs directly into spinal discs and joint cartilage.",
+    benefits: ["Heals slipped discs","Relieves chronic back pain","Lubricates spinal joints","Eases sciatica","Treats knee arthritis","Reduces joint inflammation"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
     process: [
-      { name: "Dough Prep", description: "Creating a leak-proof circular boundary using traditional gram dough." },
+      { name: "Dough Preparation", description: "Creating a leak-proof circular boundary using traditional black gram dough." },
       { name: "Oil Pooling", description: "Continuous pouring and replacement of hot medicated oils over 30-45 minutes." },
-      { name: "Local Massage", description: "Mild, restorative massage of the area after removing the oil." }
+      { name: "Local Massage", description: "Gentle restorative massage of the area after removing the oil ring." }
     ]
   },
-  { 
-    category: "Specialized Panchkarma", title: "Udvartan (Powder Massage)", id: "udvartan",
-    benefits: ["Reduces cellulite and weight", "Exfoliates skin", "Breaks down subcutaneous fat", "Invigorates circulation"],
-    desc: "A vigorous, upward-stroking massage using dry herbal powders to break down fat and tone the body.",
-    full: "Udvartana is a unique therapeutic skin exfoliation and lymphatic drainage massage using specific dry herbal powders (like Kola or Kulattha) mixed sometimes with minimal oil. Unlike other massages, the strokes are performed briskly in an upward direction (against the hair follicles) which generates heat and friction. This directly melts subcutaneous fat, significantly reduces cellulite, and is heavily prescribed in obesity and Kapha disorders.",
+  {
+    treatmentId: "netra-tarpan", isMainCategory: false,
+    title: "Netra / Akshi Tarpan",
+    category: "OTHER PANCHKARMA & SUPPORTIVE THERAPIES",
+    image: img.misc5, duration: "30 min",
+    shortDescription: "Eye bath with medicated ghee to improve vision and reduce dryness and strain.",
+    description: "Netra Tarpan pools warm medicated ghee over the eyes using a dough ring. It nourishes the optic nerves, strengthens eye muscles, and is highly effective for dry eyes, computer vision syndrome, and early cataracts.",
+    benefits: ["Improves vision clarity","Relieves dry eyes","Soothes eye strain","Strengthens optic nerves","Treats early cataracts","Cooling & refreshing"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
     process: [
-      { name: "Powder Heating", description: "Specific herbal powders are gently roasted/heated to increase efficacy." },
-      { name: "Friction Massage", description: "Therapists apply brisk upward strokes to generate therapeutic heat and friction." },
-      { name: "Cleansing", description: "A hot water bath to wash off the herbal paste, leaving skin exceptionally smooth." }
+      { name: "Dough Ring Application", description: "A leak-proof ring of dough is placed around both eyes." },
+      { name: "Ghee Pooling", description: "Warm medicated ghee is poured into the ring until it covers the eyeball." },
+      { name: "Eye Movement", description: "Patient gently opens and closes eyes to allow the ghee to nourish all surfaces." }
     ]
   },
 
-  // 3. Skin & Hair Treatments
-  { 
-    category: "Skin & Hair", title: "Hair Growth / Trichology Treatment", id: "hair-growth",
-    benefits: ["Stops early hair fall", "Reactivates dormant follicles", "Reduces scalp inflammation", "Prevents premature graying"],
-    desc: "A comprehensive Ayurvedic approach to naturally arresting hair fall and promoting dense regrowth using targeted scalp therapies and internal medicines.",
-    full: "Ayurvedic Trichology focuses on resolving hair issues at their root cause (Asthi Dhatu and Pitta imbalances) rather than just treating the surface. By utilizing specialized treatments such as Shirolepa (herbal head packs), micro-needling with herbal serums, and highly concentrated Brahmi/Bhringraj oil therapies, we reinvigorate blood supply to the follicles and stop chronic shedding naturally.",
+  // ── 5. WEIGHT LOSS & BODY DETOX ─────────────────────────────────────────
+  {
+    treatmentId: "cat-weightloss", isMainCategory: true,
+    title: "Weight Loss & Body Detox",
+    category: "WEIGHT LOSS & BODY DETOX",
+    image: img.weight, duration: "Variable",
+    shortDescription: "Sustainable weight management, inch loss, and body detoxification programs.",
+    description: "These treatments provide sustainable weight management, inch loss, and body shaping by removing deep-seated toxins, improving digestive fire (Agni), and enhancing metabolism — without crash dieting.",
+    benefits: ["Sustainable weight loss","Toxin elimination","Improved metabolism","Inch loss & body shaping","Digestive reset","Increased energy levels"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
     process: [
-      { name: "Follicle Analysis", description: "Micro-assessment of the scalp to understand blockages and hair porosity." },
-      { name: "Scalp Detox", description: "Application of exfoliating herbal scrubs to remove dead skin and product buildup." },
-      { name: "Herbal Infusion", description: "Deep application of specialized botanical pastes (Shirolepa)." },
-      { name: "Root Stimulation", description: "Mild therapies to stimulate circulation directly into the hair roots." }
+      { name: "Assessment", description: "Body composition analysis and root cause identification." },
+      { name: "Detox Protocol", description: "Customized Ayurvedic detoxification and weight loss therapies." },
+      { name: "Diet & Lifestyle Guidance", description: "Personalized dietary plan and lifestyle modifications." }
+    ]
+  },
+  {
+    treatmentId: "fat-reduction", isMainCategory: false,
+    title: "Fat Reduction Therapies",
+    category: "WEIGHT LOSS & BODY DETOX",
+    image: img.weight, duration: "60 min",
+    shortDescription: "Targeted fat reduction using Udwartana, heat therapy, and advanced body contouring.",
+    description: "Our Fat Reduction Therapies combine Ayurvedic Udwartana, localized heat therapies, and body wraps to target stubborn fat deposits, improve lymphatic drainage, and significantly reduce inches.",
+    benefits: ["Targeted inch loss","Breaks down fat cells","Improves lymphatic drainage","Non-invasive","Reduces cellulite","Firms skin"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
+    process: [
+      { name: "Body Mapping", description: "Identifying and marking the areas with stubborn fat deposits." },
+      { name: "Udwartana / Heat Therapy", description: "Application of herbal powders and heat treatments to targeted zones." },
+      { name: "Body Wrap", description: "Herbal body wraps to consolidate results and reduce inches." }
+    ]
+  },
+  {
+    treatmentId: "body-detox", isMainCategory: false,
+    title: "Body Detox Programs",
+    category: "WEIGHT LOSS & BODY DETOX",
+    image: img.misc1, duration: "3–21 days",
+    shortDescription: "Comprehensive Ayurvedic programs to flush metabolic waste and rejuvenate the system.",
+    description: "Body Detox Programs combine Panchakarma therapies, herbal formulations, detox diets, and Yoga/Pranayama to systematically eliminate metabolic waste and rejuvenate cellular function.",
+    benefits: ["Eliminates metabolic waste","Systemic rejuvenation","Increased energy","Improved organ function","Mental clarity","Glowing skin"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
+    process: [
+      { name: "Pre-Detox Preparation", description: "A preparatory diet and herbal protocol a few days before the program." },
+      { name: "Active Detox Phase", description: "Combination of Panchakarma therapies, specialized diet, and Yoga." },
+      { name: "Rejuvenation Phase", description: "Rebuilding the body post-detox with Rasayana formulations." }
+    ]
+  },
+  {
+    treatmentId: "metabolism-boost", isMainCategory: false,
+    title: "Metabolism Boost Therapies",
+    category: "WEIGHT LOSS & BODY DETOX",
+    image: img.misc4, duration: "30–45 min",
+    shortDescription: "Correcting digestive fire (Agni) naturally for enhanced energy and fat conversion.",
+    description: "Metabolism Boost Therapies reset the digestive fire (Agni) using specific herbal formulations, dietary modifications, and targeted therapies — dramatically improving how your body converts food to energy rather than fat.",
+    benefits: ["Resets digestive fire (Agni)","Converts fat to energy","Reduces bloating","Eliminates metabolic sluggishness","Sustainable energy boost","Natural and safe"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
+    process: [
+      { name: "Agni Assessment", description: "Evaluation of the strength and type of digestive fire." },
+      { name: "Herbal Protocol", description: "Administration of Agni-kindling herbs and formulations." },
+      { name: "Dietary Reset", description: "Customized diet plan to sustain an improved metabolism." }
     ]
   },
 
-  // 4. Cosmetology Treatments
-  { 
-    category: "Cosmetology", title: "Advanced Ayurvedic Medi-facial", id: "medi-facial",
-    benefits: ["Removes hyperpigmentation", "Hydrates deeper skin layers", "Cures chronic acne", "Brings immediate glowing radiance"],
-    desc: "A deep clinical facial merging modern extraction techniques with pristine Ayurvedic botanical formulations.",
-    full: "Our Medi-facial bridges the gap between chemical-heavy dermatologist treatments and basic spa facials. Utilizing steam, ultrasonic extractions, and potent Ayurvedic bio-extracts like Kumkumadi (Saffron) and Manjistha (Rubia cordifolia), this facial penetrates deeply into the dermal layers. It treats heavy pigmentation, severe acne, and photo-aging with zero chemical side-effects.",
+  // ── 6. WELLNESS, WOMEN & IMMUNITY CARE ──────────────────────────────────
+  {
+    treatmentId: "cat-wellness", isMainCategory: true,
+    title: "Wellness, Women & Immunity Care",
+    category: "WELLNESS, WOMEN & IMMUNITY CARE",
+    image: img.women, duration: "Variable",
+    shortDescription: "Holistic health, hormonal balance, fertility support, child immunity, and mental wellness.",
+    description: "This category focuses on holistic health, hormonal balance, fertility support, child immunity, and mental wellness. It promotes long-term health, disease prevention, and overall well-being through Ayurvedic protocols.",
+    benefits: ["Hormonal balance","Fertility support","Child immunity","Stress management","Mental wellness","Long-term health"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
     process: [
-      { name: "Herbal Cleansing", description: "Removing surface impurities with unadulterated milk and rose water formulations." },
-      { name: "Steam & Extraction", description: "Opening pores gently and extracting blackheads using clinical tools." },
-      { name: "Bio-Serum Application", description: "Infusing specific Ayurvedic serums using dermal massage." },
-      { name: "Rejuvenating Mask", description: "Application of a custom-mixed mud and herb pack to lock in moisture." }
+      { name: "Holistic Consultation", description: "In-depth assessment of health history, hormonal status, and wellness goals." },
+      { name: "Personalized Protocol", description: "Designing a customized treatment plan." },
+      { name: "Ongoing Support", description: "Regular follow-ups to monitor progress and adjust the protocol." }
     ]
   },
-
-  // 5. Other Ayurvedic Treatments
-  { 
-    category: "Other Ayurvedic", title: "Infertility Treatment (Vajikarana)", id: "infertility",
-    benefits: ["Improves egg/sperm quality", "Regulates ovulation", "Thickens uterine lining", "Clears fallopian tubal blocks"],
-    desc: "A deeply holistic protocol ensuring complete cellular level nourishment of reproductive tissues to aid natural conception.",
-    full: "Ayurvedic Vajikarana and prenatal protocols focus on producing the highest quality Shukra & Artava (reproductive tissues). Treatment starts with detoxifying the body of toxins that disrupt hormonal signals, followed by specific protocols like Uttara Basti (intra-uterine or intra-urethral medication). It provides incredibly high success rates in cases of unexplained infertility, low AMH, and sperm morphology issues without invasive IVF procedures.",
+  {
+    treatmentId: "pcod", isMainCategory: false,
+    title: "PCOD / PCOS Treatment",
+    category: "WELLNESS, WOMEN & IMMUNITY CARE",
+    image: img.weight, duration: "Ongoing",
+    shortDescription: "Ayurvedic hormonal regulation for PCOD/PCOS management and cycle restoration.",
+    description: "Ayurvedic treatment of PCOD/PCOS addresses hormonal dysregulation stemming from Kapha and Pitta imbalances using specific Panchakarma procedures, herbal formulations, and dietary modifications.",
+    benefits: ["Regulates menstrual cycle","Shrinks ovarian cysts","Improves insulin sensitivity","Reduces facial hair","Balances hormones naturally","Improves fertility"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
+    process: [
+      { name: "Hormonal Assessment", description: "Review of blood work, symptoms, and ultrasound findings." },
+      { name: "Panchakarma Protocol", description: "Virechan and Basti tailored to clear hormonal toxins." },
+      { name: "Herbal Therapy", description: "Long-term herbal formulations for hormonal regulation." }
+    ]
+  },
+  {
+    treatmentId: "infertility", isMainCategory: false,
+    title: "Infertility Treatment",
+    category: "WELLNESS, WOMEN & IMMUNITY CARE",
+    image: img.women, duration: "Ongoing",
+    shortDescription: "Natural fertility support using Vajikarana protocols to optimize reproductive health.",
+    description: "Ayurvedic Vajikarana and fertility protocols focus on producing the highest quality reproductive tissues. Treatment detoxifies the body and uses Uttara Basti to provide high success rates in unexplained infertility.",
+    benefits: ["Improves egg/sperm quality","Regulates ovulation","Thickens uterine lining","Clears hormonal blocks","All-natural approach","High success rates"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
     process: [
       { name: "Detoxification", description: "Initial Panchakarma to clear channels and reset hormonal feedback loops." },
-      { name: "Pichu / Uttara Basti", description: "Localized therapies to deliver medicine directly to reproductive organs." },
-      { name: "Rasayana Administration", description: "Long-term consumption of specialized herbal jams and tonic medicines to build tissue." }
+      { name: "Uttara Basti / Pichu", description: "Localized therapies to deliver medicine to reproductive organs." },
+      { name: "Rasayana Administration", description: "Long-term herbal tonics to build reproductive tissue quality." }
     ]
   },
-
-  // 6. Advanced Ayurvedic Procedures
-  { 
-    category: "Advanced Ayurvedic", title: "Agnikarma (Thermal Cautery)", id: "agnikarma",
-    benefits: ["Instant pain relief", "Heals frozen shoulder", "Cures heel spurs", "Resolves tennis elbow"],
-    desc: "An ancient, highly effective micro-cauterization technique specifically used for instant relief in musculoskeletal and nerve pain.",
-    full: "Agnikarma is a specialized parasurgical procedure where therapeutic heat is selectively transferred to specific painful points of the body using a specially designed metal instrument (Shalaka) made of gold, copper, or mixed metals. By applying controlled thermal energy over the inflamed tendons, ligaments, or muscles, it immediately breaks the pain-spasm cycle and significantly increases local tissue metabolism to invoke rapid healing. It is magic for cases of heel spur, tennis elbow, and frozen shoulder.",
+  {
+    treatmentId: "garbhasanskar", isMainCategory: false,
+    title: "Garbhasanskar (Pregnancy Care)",
+    category: "WELLNESS, WOMEN & IMMUNITY CARE",
+    image: img.detox, duration: "Ongoing",
+    shortDescription: "Ancient Ayurvedic pregnancy care for the health of mother and unborn child.",
+    description: "Garbhasanskar is the ancient Ayurvedic practice of influencing the physical, mental, and spiritual development of the child in the womb through safe therapies, specific dietary guidelines, and positive conditioning.",
+    benefits: ["Safe for mother & baby","Promotes fetal development","Eases pregnancy discomfort","Reduces stress in pregnancy","Prepares for labor","Traditional wisdom"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
     process: [
-      { name: "Point Identification", description: "Locating the exact maximum tenderness trigger points." },
-      { name: "Thermal Application", description: "Applying the heated Shalaka to create micro-dots over the skin." },
-      { name: "Cooling Paste", description: "Immediate application of pure aloe vera or honey to soothe the epidermis while internal heat does the healing." }
+      { name: "Trimester Assessment", description: "Safe therapies and guidance tailored to each trimester." },
+      { name: "Ayurvedic Nutrition", description: "Customized pregnancy diet and safe herbal formulations." },
+      { name: "Holistic Practices", description: "Music therapy, Yoga, and positive conditioning for mother and child." }
     ]
   },
-  { 
-    category: "Advanced Ayurvedic", title: "Jaloka (Leech Therapy)", id: "jaloka",
-    benefits: ["Purifies localized blood", "Treats deep varicose veins", "Heals non-healing ulcers", "Superior in gout relief"],
-    desc: "A highly specialized blood-purification protocol utilizing medicinal leeches to extract toxic blood and inject powerful bio-chemicals.",
-    full: "Jalaukavacharana (Leech therapy) is a unique and painless form of Raktamokshana. Medicinal leeches are applied to diseased bodily areas where deep toxic blood pooling has occurred. As the leech extracts the impure blood, its saliva simultaneously injects over 100 bioactive substances including Hirudin (a powerful anti-coagulant), anti-inflammatory mediators, and anesthetics into the host. This treats severe eczema, varicose ulcers, gout, and thrombotic conditions dramatically.",
+  {
+    treatmentId: "suvarnaprashan", isMainCategory: false,
+    title: "Suvarnaprashan (Child Immunity)",
+    category: "WELLNESS, WOMEN & IMMUNITY CARE",
+    image: img.misc3, duration: "10–15 min",
+    shortDescription: "Traditional gold-based Ayurvedic drops to boost child immunity and cognitive development.",
+    description: "Suvarnaprashan is an ancient Ayurvedic immunization where purified gold mixed with honey, ghee, and herbal formulations is given to children (0–16 years) to dramatically strengthen immunity, enhance intelligence, and protect against seasonal illnesses.",
+    benefits: ["Boosts immunity","Enhances intelligence & memory","Improves digestion","Protects against infections","Increases concentration","Traditional gold therapy"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
     process: [
-      { name: "Selection & Prep", description: "Medicinal leeches are taken from sterile environments and purified in turmeric water." },
-      { name: "Application", description: "The leech is applied precisely to the affected lesion or vein." },
-      { name: "Detachment & Dressing", description: "Once full, the leech naturally detaches. The area is dressed with herbal styptic powders." }
+      { name: "Age-appropriate Dosing", description: "Precise dose calculation based on the child's age and weight." },
+      { name: "Auspicious Timing", description: "Traditionally administered on Pushya Nakshatra day for maximum benefit." },
+      { name: "Regular Follow-up", description: "Monthly sessions for sustained immunity and cognitive enhancement." }
+    ]
+  },
+  {
+    treatmentId: "stress-mgmt", isMainCategory: false,
+    title: "Stress Management",
+    category: "WELLNESS, WOMEN & IMMUNITY CARE",
+    image: img.misc6, duration: "60 min",
+    shortDescription: "Lowering cortisol and restoring emotional balance through Ayurvedic and mindfulness therapies.",
+    description: "Our Stress Management protocol combines Shirodhara, Abhyanga, herbal Rasayana medicines, and Pranayama to deeply calm the nervous system, reduce cortisol, and restore emotional equilibrium.",
+    benefits: ["Reduces cortisol","Improves sleep quality","Relieves anxiety","Restores emotional balance","Clears mental fog","Provides deep relaxation"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
+    process: [
+      { name: "Mind-Body Assessment", description: "Understanding stress triggers, sleep patterns, and nervous system status." },
+      { name: "Calming Therapies", description: "Shirodhara, Abhyanga, and herbal Nasya for deep nervous system calm." },
+      { name: "Rasayana & Yoga", description: "Adaptogenic herbs and personalized Yoga/Pranayama for lasting resilience." }
+    ]
+  },
+  {
+    treatmentId: "rejuvenation", isMainCategory: false,
+    title: "Rejuvenation Therapy",
+    category: "WELLNESS, WOMEN & IMMUNITY CARE",
+    image: img.misc2, duration: "45–90 min",
+    shortDescription: "Anti-aging Rasayana therapies to restore vital energy and reverse physiological aging.",
+    description: "Rasayana (Rejuvenation) Therapy uses potent formulations like Chyawanprash and specialized Panchakarma to replenish vital tissues (Dhatus), restore Ojas (life force), reverse cellular aging, and give renewed energy.",
+    benefits: ["Reverses cellular aging","Restores vital energy (Ojas)","Improves skin youthfulness","Enhances mental clarity","Boosts immunity","Increases overall vitality"],
+    whoCanBenefit: ["Dummy Audience 1", "Dummy Audience 2", "Dummy Audience 3", "Dummy Audience 4"],
+    whyChooseUs: ["Premium Care", "Expert Doctors", "Modern Facilities", "Holistic Approach"],
+    process: [
+      { name: "Vitality Assessment", description: "Evaluating Ojas (life force) levels and areas of depletion." },
+      { name: "Rasayana Therapies", description: "Application of specific rejuvenating therapies including Abhyanga and Shirodhara." },
+      { name: "Herbal Rasayana", description: "Customized long-term formulation for sustained anti-aging benefits." }
     ]
   }
 ];
 
-// Group descriptions and benefits for Main Categories
-const mainCategoryDetails = {
-  "Panchkarma Treatments": {
-    desc: "Ayurveda's ultimate purification protocol designed to cleanse deep-seated toxins and restore the exact balance of your doshas.",
-    full: "Panchakarma is the core of Ayurvedic detoxification. It involves five primary procedures (Vaman, Virechan, Basti, Nasya, Raktamokshan) tailored to each individual's needs. The process includes preparatory (Purvakarma), main (Pradhankarma), and post-detox (Paschatkarma) stages to ensure total systemic renewal.",
-    benefits: ["Eliminates Root Disease", "Reverses Cellular Aging", "Resets Digestion (Agni)", "Balances Hormones", "Mental Clarity", "Boosts Immunity"]
-  },
-  "Skin & Hair": {
-    desc: "Natural rejuvenation combining modern cosmetology with ancient Ayurvedic principles to restore your natural glow and hair health.",
-    full: "Our Skin & Hair therapies focus on detoxifying blood, nourishing the Dhatus (tissues), and using potent herbal extracts. We treat conditions like chronic hair fall, acne, and pigmentation by resolving internal imbalances and applying specialized topical protocols.",
-    benefits: ["Natural Radiant Glow", "Stops Chronic Hair Fall", "Chemical-Free Rejuvenation", "Treats Acne Root Cause", "Promotes Thick Hair Growth"]
-  },
-  "Cosmetology": {
-    desc: "Advanced aesthetic improvements using pristine Ayurvedic botanical formulations for anti-aging and deep complexion clearing.",
-    full: "Experience non-invasive beauty enhancement. Our cosmetology treatments clear deep-seated dermal impurities, hydrate tissue layers, and utilize clinical herbs like Saffron (Kumkumadi) to reverse aging and restore vibrant facial health.",
-    benefits: ["Reverses Photo-Aging", "Deep COMPLEXION Clearing", "Hydrates Dermal Layers", "Natural Face Lift effect", "Zero Chemical Side-Effects"]
-  },
-  "Specialized Panchkarma": {
-    desc: "Targeted healing modalities using rhythmic oil pouring and localized therapies to treat focused ailments with deep efficacy.",
-    full: "These procedures move beyond general detox to address specific musculoskeletal and neuro-muscular conditions. Using warm herbal oils pooled over vital points (Shirodhara, Kati Basti, Janu Basti), we provide localized relief for chronic pain and tension.",
-    benefits: ["Instant Pain Relief", "Neuro-Muscular Healing", "Relieves Joint Stiffness", "Deep Nervous System Calm"]
-  },
-  "Other Ayurvedic": {
-    desc: "Holistic treatments for systemic wellness, including weight management, reproductive health, and rejuvenation.",
-    full: "Our 'Other' treatments cover vital life-stage needs—from children's immunity (Suvarnaprashan) to reproductive health and weight loss. These therapies restore balance to specialized bodily systems using tailored herbals.",
-    benefits: ["Hormonal Regulation", "Natural Weight Loss", "Children's Immunity Boost", "Reproductive Wellness"]
-  },
-  "Advanced Ayurvedic": {
-    desc: "Intensive clinical procedures like Agnikarma (thermal cautery) and Jaloka (leech therapy) for immediate relief in chronic cases.",
-    full: "These advanced parasurgical procedures are deployed for rapid relief in severe or persistent conditions. Agnikarma treats localized pain instantly, while Jaloka provides unique blood purification for vascular and skin disorders.",
-    benefits: ["Painless Blood Purification", "Instant Musculoskeletal Relief", "Heals Chronic Ulcers", "Rapid Healing in Severe Pain"]
-  }
-};
-
-// Combine the explicit ones + generic fallback for remaining
-const therapiesNames = [
-  // THE MAIN CATEGORY ENTRIES (These show on homepage)
-  { category: "Panchkarma Treatments", title: "Panchkarma Treatments", id: "cat-panchkarma", main: true },
-  { category: "Specialized Panchkarma", title: "Specialized Panchkarma", id: "cat-specialized", main: true },
-  { category: "Skin & Hair", title: "Skin & Hair Treatments", id: "cat-skin-hair", main: true },
-  { category: "Cosmetology", title: "Cosmetology", id: "cat-cosmetology", main: true },
-  { category: "Other Ayurvedic", title: "Other Ayurvedic Treatments", id: "cat-other", main: true },
-  { category: "Advanced Ayurvedic", title: "Advanced Ayurvedic Procedures", id: "cat-advanced", main: true },
-
-  // INDIVIDUAL PROCEDURES
-  { category: "Panchkarma Treatments", title: "Snehan (Oil Therapy)", id: "snehan", main: false },
-  { category: "Panchkarma Treatments", title: "Swedan (Steam Therapy)", id: "swedan", main: false },
-  { category: "Panchkarma Treatments", title: "Vaman (Therapeutic Vomiting)", id: "vaman", main: false },
-  { category: "Panchkarma Treatments", title: "Virechan (Purgation Therapy)", id: "virechan", main: false },
-  { category: "Panchkarma Treatments", title: "Basti (Medicated Enema)", id: "basti", main: false },
-  { category: "Panchkarma Treatments", title: "Nasya (Nasal Therapy)", id: "nasya", main: false },
-  { category: "Specialized Panchkarma", title: "Shirodhara", id: "shirodhara", main: false },
-  { category: "Specialized Panchkarma", title: "Abhyanga (Body Massage)", id: "abhyanga", main: false },
-  { category: "Specialized Panchkarma", title: "Udvartan (Powder Massage)", id: "udvartan", main: false },
-  { category: "Specialized Panchkarma", title: "Pinda Sweda", id: "pinda-sweda", main: false },
-  { category: "Specialized Panchkarma", title: "Patra Pottali Sweda", id: "patra-pottali-sweda", main: false },
-  { category: "Specialized Panchkarma", title: "Kati Basti", id: "kati-basti", main: false },
-  { category: "Specialized Panchkarma", title: "Janu Basti", id: "janu-basti", main: false },
-  { category: "Specialized Panchkarma", title: "Greeva Basti", id: "greeva-basti", main: false },
-  { category: "Specialized Panchkarma", title: "Hridaya Basti", id: "hridaya-basti", main: false },
-  { category: "Specialized Panchkarma", title: "Netra Tarpan", id: "netra-tarpan", main: false },
-  { category: "Specialized Panchkarma", title: "Karnapooran", id: "karnapooran", main: false },
-  { category: "Skin & Hair", title: "PRP Treatment", id: "prp", main: false },
-  { category: "Skin & Hair", title: "Ozone Therapy", id: "ozone-hair", main: false },
-  { category: "Skin & Hair", title: "LLLT (Laser Therapy)", id: "lllt", main: false },
-  { category: "Skin & Hair", title: "Microdermabrasion", id: "microdermabrasion", main: false },
-  { category: "Skin & Hair", title: "Hair Growth / Hair Fall Treatment", id: "hair-growth", main: false },
-  { category: "Cosmetology", title: "Medi-facial Treatment", id: "medi-facial", main: false },
-  { category: "Cosmetology", title: "Chemical Peeling", id: "chemical-peel", main: false },
-  { category: "Cosmetology", title: "Ozone Facial", id: "ozone-facial", main: false },
-  { category: "Cosmetology", title: "Anti-aging Treatment", id: "anti-aging", main: false },
-  { category: "Cosmetology", title: "Jet Peel", id: "jet-peel", main: false },
-  { category: "Cosmetology", title: "Light Therapy", id: "light-therapy", main: false },
-  { category: "Other Ayurvedic", title: "Suvarnaprashan", id: "suvarnaprashan", main: false },
-  { category: "Other Ayurvedic", title: "Weight Loss Therapy", id: "weight-loss", main: false },
-  { category: "Other Ayurvedic", title: "Infertility Treatment", id: "infertility", main: false },
-  { category: "Other Ayurvedic", title: "PCOD / PCOS Treatment", id: "pcod", main: false },
-  { category: "Other Ayurvedic", title: "Wellness & Rejuvenation", id: "wellness-rejuvenation", main: false },
-  { category: "Advanced Ayurvedic", title: "Agnikarma (Thermal cauterization)", id: "agnikarma", main: false },
-  { category: "Advanced Ayurvedic", title: "Jaloka (Leech Therapy)", id: "jaloka", main: false },
-  { category: "Advanced Ayurvedic", title: "Viddhakarma (Needle Therapy)", id: "viddhakarma", main: false },
-  { category: "Advanced Ayurvedic", title: "Pottali Massage", id: "pottali-massage", main: false }
-];
-
-const generatedTreatments = therapiesNames.map((base, idx) => {
-    const custom = therapiesData.find(d => d.id === base.id) || mainCategoryDetails[base.category];
-    return {
-        treatmentId: base.id,
-        title: base.title,
-        category: base.category,
-        isMainCategory: base.main,
-        image: getImage(idx),
-        videoUrl: "",
-        duration: "Depends on consultation",
-        shortDescription: custom ? custom.desc : `Specialized ${base.title} therapy customized for deep healing and addressing chronic disorders from their root.`,
-        description: custom ? custom.full : `Using authentic and time-tested texts of Ayurveda, ${base.title} is deployed clinically to bring transformative healing to your body, mind, and energy pathways. The therapies are tailored following strict classical protocols by expert physicians to ensure zero side effects and unparalleled systemic benefits.`,
-        benefits: custom ? custom.benefits : ["Restores bodily harmony", "Addresses root cause of disease", "Eliminates stagnant toxins", "Boosts vital cellular energy"],
-        gallery: [getImage(idx + 1), getImage(idx + 2)],
-        process: (base.main || !custom?.process) ? [
-            { name: "Consultation & Pulse Diagnosis", description: "Assessment of your Prakriti (constitution) and Vikriti (imbalances)." },
-            { name: "Therapy Preparation", description: "Specialized preparatory protocols before the main healing session begins." },
-            { name: "Main Procedure", description: `Clinical administration of ${base.title} by trained therapists under doctor supervision.` },
-            { name: "Rehabilitative Advice", description: "Customized post-therapy diet and lifestyle modifications." }
-        ] : custom.process
-    };
-});
+// Add videoUrl and gallery to each
+const finalTreatments = treatments.map(t => ({
+  ...t,
+  videoUrl: "",
+  gallery: [],
+}));
 
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/kalpvan')
-    .then(async () => {
-        console.log('✅ Connected to MongoDB for realistic seeding');
-        try {
-            await Treatment.deleteMany();
-            await Treatment.insertMany(generatedTreatments);
-            console.log(`✅ Successfully seeded realistic data for ${generatedTreatments.length} therapies!`);
-            process.exit(0);
-        } catch (error) {
-            console.error('⚠️ Unable to seed realistic therapies:', error.message);
-            process.exit(1);
-        }
-    })
-    .catch((error) => {
-        console.error('❌ MongoDB Connection Error:', error.message);
-        process.exit(1);
-    });
+  .then(async () => {
+    console.log('✅ Connected to MongoDB');
+    try {
+      await Treatment.deleteMany();
+      await Treatment.insertMany(finalTreatments);
+      console.log(`✅ Successfully seeded ${finalTreatments.length} treatments across 6 categories!`);
+      console.log('   Categories:');
+      console.log('   1. Skin & Advanced Facial Treatments (6 sub-treatments)');
+      console.log('   2. Hair & Scalp Treatments (5 sub-treatments)');
+      console.log('   3. Panchkarma - Main Detox Therapies (5 sub-treatments)');
+      console.log('   4. Other Panchkarma & Supportive Therapies (6 sub-treatments)');
+      console.log('   5. Weight Loss & Body Detox (3 sub-treatments)');
+      console.log('   6. Wellness, Women & Immunity Care (6 sub-treatments)');
+      process.exit(0);
+    } catch (error) {
+      console.error('⚠️ Unable to seed treatments:', error.message);
+      process.exit(1);
+    }
+  })
+  .catch((error) => {
+    console.error('❌ MongoDB Connection Error:', error.message);
+    process.exit(1);
+  });

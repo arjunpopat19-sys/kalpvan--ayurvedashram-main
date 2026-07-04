@@ -8,10 +8,13 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { treatments } from "@/data/treatments";
 import { API_BASE_URL } from "@/lib/api";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getTranslation } from "@/data/translations";
 
 const defaultForm = { patientName: "", phone: "", email: "", date: "", time: "", message: "", treatment: "" };
 
 const Appointment = () => {
+  const { language } = useLanguage();
   const [form, setForm] = useState(defaultForm);
   const [submitting, setSubmitting] = useState(false);
 
@@ -19,12 +22,12 @@ const Appointment = () => {
     e.preventDefault();
 
     if (!form.patientName || !form.phone || !form.date || !form.treatment) {
-      toast.error("Please fill in all required fields.");
+      toast.error(getTranslation(language, 'reqFields'));
       return;
     }
 
     if (!/^[0-9+\-\s]{7,15}$/.test(form.phone)) {
-      toast.error("Enter a valid phone number (digits, +, -).");
+      toast.error(getTranslation(language, 'validPhone'));
       return;
     }
 
@@ -49,7 +52,7 @@ const Appointment = () => {
         throw new Error(payload?.message ?? "Unable to submit appointment");
       }
 
-      toast.success("Appointment request submitted! We'll contact you shortly.");
+      toast.success(getTranslation(language, 'appointmentSuccess'));
       setForm(defaultForm);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Something went wrong";
@@ -64,12 +67,12 @@ const Appointment = () => {
       <section className="section-padding">
         <div className="max-w-3xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
-            <p className="text-primary font-medium text-sm uppercase tracking-widest mb-2">Book Now</p>
+            <p className="text-primary font-medium text-sm uppercase tracking-widest mb-2">{getTranslation(language, 'bookNow')}</p>
             <h1 className="font-display text-3xl md:text-5xl font-bold text-foreground mb-4">
-              Schedule Your Appointment
+              {getTranslation(language, 'scheduleTitle')}
             </h1>
             <p className="text-muted-foreground">
-              Fill out the form below or reach us via WhatsApp for instant booking.
+              {getTranslation(language, 'scheduleDesc')}
             </p>
           </motion.div>
 
@@ -83,19 +86,19 @@ const Appointment = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
-                  <User size={14} /> Full Name *
+                  <User size={14} /> {getTranslation(language, 'fullName')}
                 </label>
                 <Input
                   value={form.patientName}
                   onChange={(e) => setForm({ ...form, patientName: e.target.value })}
-                  placeholder="Your full name"
+                  placeholder={getTranslation(language, 'fullNamePlaceholder')}
                   className="rounded-xl"
                   required
                 />
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
-                  <Phone size={14} /> Phone *
+                  <Phone size={14} /> {getTranslation(language, 'phoneLabel')} *
                 </label>
                 <Input
                   value={form.phone}
@@ -107,23 +110,23 @@ const Appointment = () => {
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
-                  <Mail size={14} /> Email
+                  <Mail size={14} /> {getTranslation(language, 'emailLabel')}
                 </label>
                 <Input
                   type="email"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  placeholder="your@email.com"
+                  placeholder={getTranslation(language, 'emailPlaceholder')}
                   className="rounded-xl"
                 />
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
-                  <Leaf size={14} /> Preferred Treatment *
+                  <Leaf size={14} /> {getTranslation(language, 'prefTreatment')}
                 </label>
                 <Select value={form.treatment} onValueChange={(value) => setForm({ ...form, treatment: value })}>
                   <SelectTrigger className="rounded-xl">
-                    <SelectValue placeholder="Select a treatment" />
+                    <SelectValue placeholder={getTranslation(language, 'selectTreatment')} />
                   </SelectTrigger>
                   <SelectContent>
                     {treatments.map((t) => (
@@ -136,7 +139,7 @@ const Appointment = () => {
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
-                  <Calendar size={14} /> Preferred Date *
+                  <Calendar size={14} /> {getTranslation(language, 'prefDate')}
                 </label>
                 <Input
                   type="date"
@@ -148,7 +151,7 @@ const Appointment = () => {
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
-                  <Clock size={14} /> Preferred Time
+                  <Clock size={14} /> {getTranslation(language, 'prefTime')}
                 </label>
                 <Input
                   type="time"
@@ -160,12 +163,12 @@ const Appointment = () => {
             </div>
             <div>
               <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
-                <FileText size={14} /> Message
+                <FileText size={14} /> {getTranslation(language, 'messageLabel')}
               </label>
               <Textarea
                 value={form.message}
                 onChange={(e) => setForm({ ...form, message: e.target.value })}
-                placeholder="Describe your health concern or preferred treatment..."
+                placeholder={getTranslation(language, 'describeConcern')}
                 className="rounded-xl"
                 rows={4}
               />
@@ -175,7 +178,7 @@ const Appointment = () => {
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-full text-base py-6"
               disabled={submitting}
             >
-              {submitting ? "Submitting..." : "Submit Appointment Request"}
+              {submitting ? getTranslation(language, 'submittingBtn') : getTranslation(language, 'submitBtn')}
             </Button>
           </motion.form>
         </div>

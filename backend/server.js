@@ -15,6 +15,9 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/appointments', require('./routes/appointmentRoutes'));
 app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/treatments', require('./routes/treatmentRoutes'));
+app.use('/api/patients', require('./routes/patientRoutes'));
+app.use('/api/medicines', require('./routes/medicineRoutes'));
+app.use('/api/records', require('./routes/recordRoutes'));
 
 // Default route
 app.get('/', (req, res) => {

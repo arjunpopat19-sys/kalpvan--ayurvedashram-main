@@ -3,14 +3,38 @@ const Treatment = require('../models/Treatment');
 // Get all treatments
 exports.getTreatments = async (req, res) => {
     try {
-        const treatments = await Treatment.find();
+        const treatments = await Treatment.find().sort({ isMainCategory: -1, category: 1 });
         res.json(treatments);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// Get single treatment
+// Get only main category treatments (for homepage)
+exports.getMainCategories = async (req, res) => {
+    try {
+        const mainCategories = await Treatment.find({ isMainCategory: true }).sort({ category: 1 });
+        res.json(mainCategories);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Get sub-treatments by category name
+exports.getSubTreatmentsByCategory = async (req, res) => {
+    try {
+        const categoryName = decodeURIComponent(req.params.category);
+        const subTreatments = await Treatment.find({
+            category: categoryName,
+            isMainCategory: false
+        });
+        res.json(subTreatments);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Get single treatment by treatmentId
 exports.getTreatmentById = async (req, res) => {
     try {
         const treatment = await Treatment.findOne({ treatmentId: req.params.id });
@@ -47,6 +71,7 @@ exports.updateTreatment = async (req, res) => {
         }
         res.json(updatedTreatment);
     } catch (error) {
+        console.error("UPDATE ERROR:", error);
         res.status(400).json({ message: error.message });
     }
 };
