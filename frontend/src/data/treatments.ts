@@ -18,8 +18,10 @@ export interface Treatment {
   category: string;
   gallery?: string[];
   isMainCategory?: boolean;
+  isFeatured?: boolean;
   whoCanBenefit?: string[];
   whyChooseUs?: string[];
+  sequence?: number;
   
   // Hindi Localization Fields (Optional)
   titleHi?: string;

@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { MapPin, Award, Eye, Target, CheckCircle2, Users, HeartPulse, Leaf } from "lucide-react";
-import doctorImg from "@/assets/doctor.jpg";
+import { useDoctorImage } from "@/hooks/useDoctorImage";
 import heroBg from "@/assets/hero-bg.jpg";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -23,7 +23,7 @@ const translations = {
       "Focus on treating the root cause, not just symptoms",
       "Comprehensive lifestyle and dietary guidance"
     ],
-    sinceTitle: "Since 2008",
+    sinceTitle: "Since 2002",
     sinceDesc: "Serving the community with ancient wisdom and modern care.",
     expertTitle: "Meet The Expert",
     expertHeading: "Our Chief Physician",
@@ -51,7 +51,7 @@ const translations = {
       "केवल लक्षणों का नहीं, बल्कि मूल कारण के इलाज पर ध्यान",
       "व्यापक जीवन शैली और आहार मार्गदर्शन"
     ],
-    sinceTitle: "2008 से",
+    sinceTitle: "2002 से",
     sinceDesc: "प्राचीन ज्ञान और आधुनिक देखभाल के साथ समुदाय की सेवा।",
     expertTitle: "विशेषज्ञ से मिलें",
     expertHeading: "हमारे मुख्य चिकित्सक",
@@ -65,6 +65,7 @@ const translations = {
 
 const About = () => {
   const { language } = useLanguage();
+  const { doctorImg } = useDoctorImage();
   const t = translations[language];
 
   const containerVariants = {
@@ -120,10 +121,10 @@ const About = () => {
             className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8"
           >
             {[
-              { icon: Award, number: "15+", label: t.stats.exp },
+              { icon: Award, number: "20+", label: t.stats.exp },
               { icon: Users, number: "10,000+", label: t.stats.pat },
               { icon: Leaf, number: "100%", label: t.stats.auth },
-              { icon: HeartPulse, number: "20+", label: t.stats.ther },
+              { icon: HeartPulse, number: "35+", label: t.stats.ther },
             ].map((stat, idx) => (
               <motion.div key={idx} variants={itemVariants} className="bg-card shadow-xl rounded-2xl p-6 text-center border border-border/50 backdrop-blur-sm">
                 <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4 text-primary">

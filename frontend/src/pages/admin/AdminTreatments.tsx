@@ -24,16 +24,34 @@ const AdminTreatments = () => {
   const [editing, setEditing] = useState<Treatment | null>(null);
   const [isNew, setIsNew] = useState(false);
   const [editLang, setEditLang] = useState<'en' | 'hi'>('en');
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
+
+  // Dynamically extract all unique categories
+  const dynamicCategories = Array.from(new Set([
+    ...CATEGORY_ORDER,
+    ...treatments.map(t => t.category)
+  ])).filter(Boolean);
 
   useEffect(() => {
-    // Sort treatments: First by category order, then main categories first
+    // Sort treatments: First by main category's sequence, then by CATEGORY_ORDER, then main categories first, then by sequence
     const sorted = [...treatments].sort((a, b) => {
+      // Find the main category for 'a' and 'b' to get their category-level sequence
+      const mainA = treatments.find(t => t.category === a.category && t.isMainCategory);
+      const mainB = treatments.find(t => t.category === b.category && t.isMainCategory);
+      
+      const catSeqA = mainA?.sequence || 999;
+      const catSeqB = mainB?.sequence || 999;
+
+      // Sort by Category Sequence first
+      if (catSeqA !== catSeqB) {
+         return catSeqA - catSeqB;
+      }
+
+      // If category sequence is the same, sort by CATEGORY_ORDER
       const idxA = CATEGORY_ORDER.indexOf(a.category);
       const idxB = CATEGORY_ORDER.indexOf(b.category);
       
-      // If categories are different, sort by CATEGORY_ORDER
       if (idxA !== idxB) {
-        // Handle unknown categories by putting them at the end
         if (idxA === -1) return 1;
         if (idxB === -1) return -1;
         return idxA - idxB;
@@ -44,7 +62,13 @@ const AdminTreatments = () => {
         return a.isMainCategory ? -1 : 1;
       }
       
-      return 0; // Otherwise keep original order
+      // If same category and both are main or both are sub, sort by sequence number
+      const seqA = a.sequence || 999;
+      const seqB = b.sequence || 999;
+      if (seqA !== seqB) return seqA - seqB;
+      
+      // Fallback to alphabetical title if sequence is the same
+      return (a.title || "").localeCompare(b.title || "");
     });
     setList(sorted);
   }, [treatments]);
@@ -59,7 +83,7 @@ const AdminTreatments = () => {
       { name: "", description: "" }
     ], 
     duration: "", image: "", category: "", videoUrl: "",
-    gallery: [], isMainCategory: false
+    gallery: [], isMainCategory: false, sequence: 0
   };
 
   const openNew = () => { setEditing({ ...emptyTreatment, treatmentId: `t-${Date.now()}` }); setIsNew(true); };
@@ -203,17 +227,41 @@ const AdminTreatments = () => {
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-sm font-semibold">Category</Label>
-            <select
-              value={editing.category}
-              onChange={e => setEditing({ ...editing, category: e.target.value })}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option value="" disabled>Select a Category...</option>
-              {CATEGORY_ORDER.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
+            <Label className="text-sm font-semibold flex justify-between">
+              Category
+              {isCustomCategory && (
+                <button type="button" onClick={() => { setIsCustomCategory(false); setEditing({ ...editing, category: "" }); }} className="text-xs text-primary hover:underline">
+                  Cancel Custom
+                </button>
+              )}
+            </Label>
+            {isCustomCategory ? (
+              <Input 
+                value={editing.category} 
+                placeholder="Enter custom category name..." 
+                onChange={e => setEditing({ ...editing, category: e.target.value.toUpperCase() })} 
+                autoFocus
+              />
+            ) : (
+              <select
+                value={dynamicCategories.includes(editing.category) ? editing.category : ""}
+                onChange={e => {
+                  if (e.target.value === "__CUSTOM__") {
+                    setIsCustomCategory(true);
+                    setEditing({ ...editing, category: "" });
+                  } else {
+                    setEditing({ ...editing, category: e.target.value });
+                  }
+                }}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="" disabled>Select a Category...</option>
+                {dynamicCategories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+                <option value="__CUSTOM__" className="font-bold text-primary">+ Add Custom Category...</option>
+              </select>
+            )}
           </div>
           <div className="space-y-2">
             <Label className="text-sm font-semibold">Duration</Label>
@@ -227,16 +275,58 @@ const AdminTreatments = () => {
             <Label className="text-sm font-semibold flex items-center gap-1"><PlayCircle size={14} /> Video URL</Label>
             <Input value={editing.videoUrl || ""} placeholder="YouTube URL" onChange={e => setEditing({ ...editing, videoUrl: e.target.value })} />
           </div>
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold text-primary">Display Sequence</Label>
+            <select
+              value={editing.sequence || 0}
+              onChange={e => setEditing({ ...editing, sequence: Number(e.target.value) })}
+              className="flex h-10 w-full rounded-md border border-primary/50 bg-primary/5 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+            >
+              <option value={0}>Unassigned (Alphabetical)</option>
+              {(() => {
+                const scopeTreatments = treatments.filter(t => 
+                  t.isMainCategory === (editing.isMainCategory || false) && 
+                  (editing.isMainCategory ? true : t.category === editing.category)
+                );
+                const maxSeq = Math.max(15, scopeTreatments.length + 2);
+                const taken = scopeTreatments
+                  .filter(t => t.treatmentId !== editing.treatmentId && t.sequence && t.sequence > 0)
+                  .map(t => t.sequence);
+                
+                const opts = [];
+                for (let i = 1; i <= maxSeq; i++) {
+                  if (!taken.includes(i)) opts.push(i);
+                }
+                
+                return opts.map(num => (
+                  <option key={num} value={num}>Position {num}</option>
+                ));
+              })()}
+            </select>
+          </div>
 
-          <div className="flex items-center space-x-3 bg-primary/5 p-4 rounded-lg border border-primary/10">
-            <input 
-              type="checkbox" 
-              id="isMainCategory" 
-              checked={editing.isMainCategory || false} 
-              onChange={e => setEditing({ ...editing, isMainCategory: e.target.checked })}
-              className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
-            />
-            <Label htmlFor="isMainCategory" className="cursor-pointer font-medium">Feature on Homepage</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center space-x-3 bg-primary/5 p-4 rounded-lg border border-primary/10">
+              <input 
+                type="checkbox" 
+                id="isFeatured" 
+                checked={editing.isFeatured || false} 
+                onChange={e => setEditing({ ...editing, isFeatured: e.target.checked })}
+                className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+              />
+              <Label htmlFor="isFeatured" className="cursor-pointer font-medium">Feature on Homepage</Label>
+            </div>
+
+            <div className="flex items-center space-x-3 bg-primary/5 p-4 rounded-lg border border-primary/10">
+              <input 
+                type="checkbox" 
+                id="isMainCategory" 
+                checked={editing.isMainCategory || false} 
+                onChange={e => setEditing({ ...editing, isMainCategory: e.target.checked })}
+                className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+              />
+              <Label htmlFor="isMainCategory" className="cursor-pointer font-medium text-xs">Set as MAIN Category Banner (Do NOT check for sub-treatments)</Label>
+            </div>
           </div>
           
           <div className="md:col-span-2 space-y-2">
@@ -416,7 +506,7 @@ const AdminTreatments = () => {
               <tr className="border-b border-border bg-muted/50">
                 <th className="text-left py-4 px-6 text-muted-foreground font-semibold uppercase tracking-wider">Treatment</th>
                 <th className="text-left py-4 px-6 text-muted-foreground font-semibold uppercase tracking-wider hidden md:table-cell">Category</th>
-                <th className="text-left py-4 px-6 text-muted-foreground font-semibold uppercase tracking-wider hidden md:table-cell">Duration</th>
+                <th className="text-center py-4 px-6 text-muted-foreground font-semibold uppercase tracking-wider">Order</th>
                 <th className="text-right py-4 px-6 text-muted-foreground font-semibold uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -437,7 +527,9 @@ const AdminTreatments = () => {
                     <td className="py-4 px-6 text-muted-foreground hidden md:table-cell">
                       <span className="bg-secondary px-2 py-1 rounded-md text-xs">{t.category}</span>
                     </td>
-                    <td className="py-4 px-6 text-muted-foreground hidden md:table-cell font-mono">{t.duration}</td>
+                    <td className="py-4 px-6 text-center text-foreground font-bold text-lg">
+                      {t.sequence || 0}
+                    </td>
                     <td className="py-4 px-6 text-right">
                       <div className="flex justify-end gap-1">
                         <Button 

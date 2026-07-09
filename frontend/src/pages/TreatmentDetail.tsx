@@ -20,14 +20,26 @@ const CATEGORY_META: Record<string, { icon: React.ElementType; gradient: string;
   "WELLNESS, WOMEN & IMMUNITY CARE":         { icon: ShieldCheck, gradient: "from-sky-500 to-blue-500",       light: "from-sky-500/10 to-blue-500/5",       tagline: "Balance. Protect. Flourish."    },
 };
 
-const getYouTubeEmbedUrl = (url: string) => {
+const getVideoEmbedUrl = (url: string) => {
   if (!url) return "";
+  const trimmedUrl = url.trim();
+  
   let id = "";
-  if (url.includes("youtu.be/"))           id = url.split("youtu.be/")[1]?.split("?")[0];
-  else if (url.includes("watch?v="))       id = url.split("watch?v=")[1]?.split("&")[0];
-  else if (url.includes("shorts/"))        id = url.split("shorts/")[1]?.split("?")[0];
-  else if (url.includes("embed/"))         id = url.split("embed/")[1]?.split("?")[0];
-  return id ? `https://www.youtube.com/embed/${id}` : url;
+  if (trimmedUrl.includes("youtu.be/"))           id = trimmedUrl.split("youtu.be/")[1]?.split("?")[0];
+  else if (trimmedUrl.includes("watch?v="))       id = trimmedUrl.split("watch?v=")[1]?.split("&")[0];
+  else if (trimmedUrl.includes("shorts/"))        id = trimmedUrl.split("shorts/")[1]?.split("?")[0];
+  else if (trimmedUrl.includes("embed/"))         id = trimmedUrl.split("embed/")[1]?.split("?")[0];
+  
+  if (id) return `https://www.youtube.com/embed/${id}`;
+
+  if (trimmedUrl.includes("instagram.com/")) {
+    const match = trimmedUrl.match(/instagram\.com\/(reel|p)\/([^\/?#]+)/);
+    if (match) {
+      return `https://www.instagram.com/${match[1]}/${match[2]}/embed`;
+    }
+  }
+
+  return trimmedUrl;
 };
 
 const TreatmentDetail = () => {
@@ -39,7 +51,14 @@ const TreatmentDetail = () => {
 
   // If main category, find sub-treatments
   const subTreatments = treatment?.isMainCategory
-    ? allTreatments.filter((t) => t.category === treatment.category && !t.isMainCategory)
+    ? allTreatments
+        .filter((t) => t.category === treatment.category && !t.isMainCategory)
+        .sort((a, b) => {
+          const seqA = a.sequence || 999;
+          const seqB = b.sequence || 999;
+          if (seqA !== seqB) return seqA - seqB;
+          return (a.title || "").localeCompare(b.title || "");
+        })
     : [];
 
   const meta = treatment ? (CATEGORY_META[treatment.category] ?? {
@@ -158,6 +177,36 @@ const TreatmentDetail = () => {
             </>
           )}
 
+          {/* Video (Moved before Why Choose Us) */}
+          {treatment.videoUrl && (
+            <div className="mb-12">
+              <div className="flex items-center gap-2 mb-4">
+                <PlayCircle className="text-primary" size={26} />
+                <h2 className="font-display text-2xl font-bold text-foreground">{getTranslation(language, 'videoPreview')}</h2>
+              </div>
+              
+              {(() => {
+                const url = treatment.videoUrl.trim();
+                let containerClass = "w-full";
+                let style: React.CSSProperties = { aspectRatio: "16/9" }; // Default horizontal
+                
+                if (url.includes("instagram.com/reel/") || url.includes("shorts/")) {
+                  containerClass = "w-full max-w-sm mx-auto";
+                  style = { aspectRatio: "9/16" };
+                } else if (url.includes("instagram.com/p/")) {
+                  containerClass = "w-full max-w-md mx-auto";
+                  style = { aspectRatio: "4/5" };
+                }
+
+                return (
+                  <div className={`${containerClass} rounded-2xl overflow-hidden shadow-lg border border-border bg-black/5 flex items-center justify-center`} style={style}>
+                    <iframe src={getVideoEmbedUrl(treatment.videoUrl)} title={treatment.title} className="w-full h-full" allowFullScreen />
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
           {/* Why Choose Us */}
           {((language === 'hi' && treatment.whyChooseUsHi && treatment.whyChooseUsHi.length > 0) ? treatment.whyChooseUsHi : treatment.whyChooseUs)?.length > 0 && (
             <div className="mb-16 pt-6 max-w-4xl mx-auto">
@@ -198,19 +247,6 @@ const TreatmentDetail = () => {
                     />
                   </div>
                 ))}
-              </div>
-            </div>
-          )}
-
-          {/* Video */}
-          {treatment.videoUrl && (
-            <div className="mb-12">
-              <div className="flex items-center gap-2 mb-4">
-                <PlayCircle className="text-primary" size={26} />
-                <h2 className="font-display text-2xl font-bold text-foreground">{getTranslation(language, 'videoPreview')}</h2>
-              </div>
-              <div className="aspect-video w-full rounded-2xl overflow-hidden shadow-lg border border-border">
-                <iframe src={getYouTubeEmbedUrl(treatment.videoUrl)} title={treatment.title} className="w-full h-full" allowFullScreen />
               </div>
             </div>
           )}

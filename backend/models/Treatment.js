@@ -19,8 +19,10 @@ const treatmentSchema = new mongoose.Schema({
     videoUrl: { type: String },
     category: { type: String, required: true },
     isMainCategory: { type: Boolean, default: false },
+    isFeatured: { type: Boolean, default: false },
     whoCanBenefit: [{ type: String }],
     whyChooseUs: [{ type: String }],
+    sequence: { type: Number, default: 0 },
     
     // Hindi Localization Fields (Optional)
     titleHi: { type: String, default: "" },

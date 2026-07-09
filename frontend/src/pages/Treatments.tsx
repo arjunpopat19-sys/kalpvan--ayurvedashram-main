@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, ArrowRight, Clock, Sparkles, Leaf, Activity,
-  ShieldCheck, Droplets, Zap, X, ChevronRight, CheckCircle
+  ShieldCheck, Droplets, Zap, X, ChevronRight, CheckCircle, Star
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTreatments } from "@/hooks/useTreatments";
@@ -130,7 +130,7 @@ const TreatmentCard = ({ t, i, catConfig }: { t: any; i: number; catConfig: any 
             {shortDescription}
           </p>
           <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/40">
-            <span className={`text-xs font-semibold ${catConfig.text}`}>{getTranslation(language, catConfig.tKey)}</span>
+            <span className={`text-xs font-semibold ${catConfig.text}`}>{(catConfig as any).isCustom ? catConfig.key : getTranslation(language, catConfig.tKey)}</span>
             <span className="inline-flex items-center gap-1 text-primary text-xs font-bold group-hover:gap-2 transition-all">
               {getTranslation(language, 'knowMore')} <ArrowRight size={12} />
             </span>
@@ -146,6 +146,35 @@ const Treatments = () => {
   const [search, setSearch] = useState("");
   const { treatments: allTreatments } = useTreatments();
   const { language } = useLanguage();
+
+  const sortedCats = useMemo(() => {
+    if (!allTreatments || allTreatments.length === 0) return CATS;
+
+    const uniqueCategoryNames = Array.from(new Set(allTreatments.map(t => t.category))).filter(Boolean);
+
+    const dynamicCats = uniqueCategoryNames.map(catName => {
+      const existing = CATS.find(c => c.key === catName);
+      if (existing) return existing;
+
+      return {
+        key: catName,
+        tKey: "catCustom",
+        icon: Star,
+        gradient: "from-slate-500 to-gray-600",
+        soft: "bg-slate-50 dark:bg-slate-950/30",
+        border: "border-slate-200 dark:border-slate-800",
+        text: "text-slate-600 dark:text-slate-400",
+        tagline: "Wellness & Care",
+        isCustom: true
+      };
+    });
+
+    return dynamicCats.sort((a, b) => {
+      const mainA = allTreatments.find(t => t.category === a.key && t.isMainCategory);
+      const mainB = allTreatments.find(t => t.category === b.key && t.isMainCategory);
+      return (mainA?.sequence || 999) - (mainB?.sequence || 999);
+    });
+  }, [allTreatments]);
 
   const searchResults = useMemo(() => {
     if (!search.trim()) return [];
@@ -198,7 +227,7 @@ const Treatments = () => {
         {!isSearching && (
           <div className="max-w-7xl mx-auto px-4 md:px-8 pb-0 overflow-x-auto hide-scrollbar">
             <div className="flex gap-2 min-w-max pb-0">
-              {CATS.map((cat) => {
+              {sortedCats.map((cat) => {
                 const Icon = cat.icon;
                 return (
                   <button
@@ -215,7 +244,7 @@ const Treatments = () => {
                     <div className={`w-6 h-6 rounded-lg bg-gradient-to-br ${cat.gradient} flex items-center justify-center flex-shrink-0`}>
                       <Icon size={13} className="text-white" />
                     </div>
-                    {getTranslation(language, cat.tKey)}
+                    {(cat as any).isCustom ? cat.key : getTranslation(language, cat.tKey)}
                   </button>
                 );
               })}
@@ -254,9 +283,16 @@ const Treatments = () => {
         ) : (
           /* ── Sequential Category View ── */
           <div className="space-y-24">
-            {CATS.map((activeCat, index) => {
+            {sortedCats.map((activeCat, index) => {
               const mainCat = allTreatments.find(t => t.category === activeCat.key && t.isMainCategory);
-              const subTreatments = allTreatments.filter(t => t.category === activeCat.key && !t.isMainCategory);
+              const subTreatments = allTreatments
+                .filter(t => t.category === activeCat.key && !t.isMainCategory)
+                .sort((a, b) => {
+                  const seqA = a.sequence || 999;
+                  const seqB = b.sequence || 999;
+                  if (seqA !== seqB) return seqA - seqB;
+                  return (a.title || "").localeCompare(b.title || "");
+                });
 
               if (!mainCat) return null;
 
@@ -288,7 +324,7 @@ const Treatments = () => {
                               {getTranslation(language, 'catLabel')} {index + 1}
                             </p>
                             <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground leading-tight">
-                              {(language === 'hi' && mainCat.titleHi) ? mainCat.titleHi : mainCat.title}
+                              {(activeCat as any).isCustom ? activeCat.key : getTranslation(language, activeCat.tKey)}
                             </h2>
                           </div>
                         </div>
@@ -331,7 +367,7 @@ const Treatments = () => {
                     <div className="flex items-center gap-3 mb-6">
                       <div className={`w-1 h-6 rounded-full bg-gradient-to-b ${activeCat.gradient}`} />
                       <h3 className="font-display text-2xl font-bold text-foreground">
-                        {getTranslation(language, 'allTherapies', (language === 'hi' && mainCat.titleHi) ? mainCat.titleHi : mainCat.title)}
+                        {getTranslation(language, 'allTherapies', (activeCat as any).isCustom ? activeCat.key : ((language === 'hi' && mainCat.titleHi) ? mainCat.titleHi : mainCat.title))}
                       </h3>
                       <span className={`text-sm font-bold px-2.5 py-0.5 rounded-full ${activeCat.soft} ${activeCat.text} ${activeCat.border} border`}>
                         {subTreatments.length}

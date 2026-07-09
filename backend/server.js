@@ -18,6 +18,11 @@ app.use('/api/treatments', require('./routes/treatmentRoutes'));
 app.use('/api/patients', require('./routes/patientRoutes'));
 app.use('/api/medicines', require('./routes/medicineRoutes'));
 app.use('/api/records', require('./routes/recordRoutes'));
+app.use('/api/settings', require('./routes/settingRoutes'));
+
+// Serve uploads statically
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Default route
 app.get('/', (req, res) => {

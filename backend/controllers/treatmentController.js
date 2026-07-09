@@ -47,11 +47,38 @@ exports.getTreatmentById = async (req, res) => {
     }
 };
 
+// Helper to shift sequences if there's a collision
+const shiftSequencesIfNeeded = async (treatment) => {
+    if (treatment.sequence && treatment.sequence > 0) {
+        // Query to find overlapping items in the same scope
+        const query = {
+            _id: { $ne: treatment._id },
+            isMainCategory: treatment.isMainCategory,
+            sequence: { $gte: treatment.sequence }
+        };
+        
+        // If it's a sub-treatment, only shift other sub-treatments in the SAME category
+        if (!treatment.isMainCategory) {
+            query.category = treatment.category;
+        }
+
+        // Check if there is an exact collision at the newly assigned sequence
+        const collisionQuery = { ...query, sequence: treatment.sequence };
+        const collision = await Treatment.findOne(collisionQuery);
+
+        // If there's a collision, push everything down by 1
+        if (collision) {
+            await Treatment.updateMany(query, { $inc: { sequence: 1 } });
+        }
+    }
+};
+
 // Create treatment
 exports.createTreatment = async (req, res) => {
     try {
         const newTreatment = new Treatment(req.body);
         const savedTreatment = await newTreatment.save();
+        await shiftSequencesIfNeeded(savedTreatment);
         res.status(201).json(savedTreatment);
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -69,6 +96,7 @@ exports.updateTreatment = async (req, res) => {
         if (!updatedTreatment) {
             return res.status(404).json({ message: 'Treatment not found' });
         }
+        await shiftSequencesIfNeeded(updatedTreatment);
         res.json(updatedTreatment);
     } catch (error) {
         console.error("UPDATE ERROR:", error);

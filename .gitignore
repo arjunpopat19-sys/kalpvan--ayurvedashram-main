@@ -4,3 +4,6 @@ dist/
 .DS_Store
 .vscode/
 *.log
+
+frontend/credentials.txt
+backend/uploads/

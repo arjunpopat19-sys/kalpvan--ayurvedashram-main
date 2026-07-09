@@ -1,4 +1,4 @@
-import { LayoutDashboard, Stethoscope, CalendarCheck, Star, Receipt, Package, LogOut } from "lucide-react";
+import { LayoutDashboard, Stethoscope, CalendarCheck, Star, Receipt, Package, LogOut, Settings } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,6 +25,7 @@ const items = [
   { title: "Stock", url: "/admin/stock", icon: Package },
   { title: "Billing", url: "/admin/billing", icon: Receipt },
   { title: "Daily Log", url: "/admin/daily-log", icon: CalendarCheck },
+  { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
 
 export function AdminSidebar() {

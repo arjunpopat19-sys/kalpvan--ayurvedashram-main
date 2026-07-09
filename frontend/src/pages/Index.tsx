@@ -8,7 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslation } from "@/data/translations";
 import { Review } from "@/data/dummyData";
 import { API_BASE_URL } from "@/lib/api";
-import doctorImg from "@/assets/doctor.jpg";
+import { useDoctorImage } from "@/hooks/useDoctorImage";
 import heroImg from "@/assets/hero-bg.jpg";
 
 const fadeUp = {
@@ -21,6 +21,7 @@ const fadeUp = {
 
 const HeroSection = () => {
   const { language } = useLanguage();
+  const { doctorImg } = useDoctorImage();
   return (
     <section className="relative min-h-[90vh] flex items-center overflow-hidden">
       <div className="absolute inset-0">
@@ -72,15 +73,34 @@ const HeroSection = () => {
   );
 };
 
-const MAIN_IDS = ["cat-skin", "cat-hair", "cat-panchkarma", "cat-supportive", "cat-weightloss", "cat-wellness"];
+const CATEGORY_ORDER = [
+  "SKIN & ADVANCED FACIAL TREATMENTS",
+  "HAIR & SCALP TREATMENTS",
+  "PANCHKARMA (MAIN DETOX THERAPIES)",
+  "OTHER PANCHKARMA & SUPPORTIVE THERAPIES",
+  "WEIGHT LOSS & BODY DETOX",
+  "WELLNESS, WOMEN & IMMUNITY CARE",
+];
 
 const TreatmentsSection = () => {
   const { treatments } = useTreatments();
   const { language } = useLanguage();
   
-  const displayTreatments = MAIN_IDS.map(id =>
-    treatments.find(t => t.treatmentId === id)
-  ).filter((t): t is NonNullable<typeof t> => t !== undefined);
+  const displayTreatments = treatments
+    .filter(t => t.isMainCategory || t.isFeatured)
+    .sort((a, b) => {
+      const seqA = a.sequence || 999;
+      const seqB = b.sequence || 999;
+      if (seqA !== seqB) return seqA - seqB;
+      
+      // Fallback to strict category order
+      const idxA = CATEGORY_ORDER.indexOf(a.category);
+      const idxB = CATEGORY_ORDER.indexOf(b.category);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA === -1) return 1;
+      if (idxB === -1) return -1;
+      return 0;
+    });
 
   return (
     <section className="section-padding section-alt">
@@ -156,6 +176,7 @@ const TreatmentsSection = () => {
 
 const AboutDoctorSection = () => {
   const { language } = useLanguage();
+  const { doctorImg } = useDoctorImage();
   return (
     <section className="section-padding">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">

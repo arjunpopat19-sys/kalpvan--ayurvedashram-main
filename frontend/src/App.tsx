@@ -22,6 +22,7 @@ import AdminReviews from "./pages/admin/AdminReviews";
 import AdminStock from "./pages/admin/AdminStock";
 import AdminBilling from "./pages/admin/AdminBilling";
 import AdminDailyLog from "./pages/admin/AdminDailyLog";
+import AdminSettings from "./pages/admin/AdminSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,6 +54,7 @@ const App = () => (
                 <Route path="stock" element={<AdminStock />} />
                 <Route path="billing" element={<AdminBilling />} />
                 <Route path="daily-log" element={<AdminDailyLog />} />
+                <Route path="settings" element={<AdminSettings />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
